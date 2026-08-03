@@ -9,8 +9,21 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        NavigationStack {
-            Text("Gestorio")
+        TabView {
+            AppointmentsCalendarView()
+                .tabItem {
+                    Label("Calendario", systemImage: "calendar")
+                }
+
+            ClientsView()
+                .tabItem {
+                    Label("Clientes", systemImage: "person.2")
+                }
+
+            InvoicesView()
+                .tabItem {
+                    Label("Facturas", systemImage: "doc.text")
+                }
         }
     }
 }

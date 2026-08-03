@@ -7,7 +7,7 @@ enum AppointmentStatus: String, Codable, CaseIterable {
     case cancelled
 }
 
-struct Appointment: Identifiable, Equatable {
+struct Appointment: Identifiable, Hashable {
     let id: UUID
     var clientID: UUID
     var date: Date
