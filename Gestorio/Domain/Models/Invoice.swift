@@ -8,6 +8,8 @@ struct Invoice: Identifiable, Equatable {
     var clientTaxID: String
     var concept: String
     var totalPrice: Decimal
+    var previousHash: String
+    var hash: String
 
     init(
         id: UUID = UUID(),
@@ -16,7 +18,9 @@ struct Invoice: Identifiable, Equatable {
         clientName: String,
         clientTaxID: String,
         concept: String,
-        totalPrice: Decimal
+        totalPrice: Decimal,
+        previousHash: String = "",
+        hash: String = ""
     ) {
         self.id = id
         self.number = number
@@ -25,5 +29,7 @@ struct Invoice: Identifiable, Equatable {
         self.clientTaxID = clientTaxID
         self.concept = concept
         self.totalPrice = totalPrice
+        self.previousHash = previousHash
+        self.hash = hash
     }
 }

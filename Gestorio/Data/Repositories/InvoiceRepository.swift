@@ -32,6 +32,7 @@ final class InvoiceRepository: InvoiceRepositoryProtocol {
     func create(_ invoice: Invoice) throws -> Invoice {
         let entity = InvoiceEntity(invoice: invoice)
         modelContext.insert(entity)
+        try upsertChainPointer(hash: invoice.hash)
         try modelContext.save()
         return entity.domain
     }
@@ -40,6 +41,19 @@ final class InvoiceRepository: InvoiceRepositoryProtocol {
         var descriptor = FetchDescriptor<InvoiceEntity>(predicate: #Predicate { $0.id == id })
         descriptor.fetchLimit = 1
         return try modelContext.fetch(descriptor).first
+    }
+
+    private func upsertChainPointer(hash: String) throws {
+        let singletonID = HashChainPointerEntity.singletonID
+        var descriptor = FetchDescriptor<HashChainPointerEntity>(
+            predicate: #Predicate { $0.id == singletonID }
+        )
+        descriptor.fetchLimit = 1
+        if let pointer = try modelContext.fetch(descriptor).first {
+            pointer.lastHash = hash
+        } else {
+            modelContext.insert(HashChainPointerEntity(lastHash: hash))
+        }
     }
 }
 
@@ -52,7 +66,9 @@ private extension InvoiceEntity {
             clientName: invoice.clientName,
             clientTaxID: invoice.clientTaxID,
             concept: invoice.concept,
-            totalPrice: invoice.totalPrice
+            totalPrice: invoice.totalPrice,
+            previousHash: invoice.previousHash,
+            hash: invoice.hash
         )
     }
 
@@ -64,7 +80,9 @@ private extension InvoiceEntity {
             clientName: clientName,
             clientTaxID: clientTaxID,
             concept: concept,
-            totalPrice: totalPrice
+            totalPrice: totalPrice,
+            previousHash: previousHash,
+            hash: hash
         )
     }
 }

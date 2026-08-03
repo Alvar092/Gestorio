@@ -10,6 +10,8 @@ final class PersistenceController {
             ClientEntity.self,
             AppointmentEntity.self,
             InvoiceEntity.self,
+            CorrectiveInvoiceEntity.self,
+            HashChainPointerEntity.self,
         ])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

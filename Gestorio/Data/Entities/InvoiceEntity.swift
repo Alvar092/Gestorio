@@ -10,6 +10,8 @@ final class InvoiceEntity {
     var clientTaxID: String
     var concept: String
     var totalPrice: Decimal
+    var previousHash: String
+    var hash: String
 
     init(
         id: UUID,
@@ -18,7 +20,9 @@ final class InvoiceEntity {
         clientName: String,
         clientTaxID: String,
         concept: String,
-        totalPrice: Decimal
+        totalPrice: Decimal,
+        previousHash: String,
+        hash: String
     ) {
         self.id = id
         self.number = number
@@ -27,5 +31,7 @@ final class InvoiceEntity {
         self.clientTaxID = clientTaxID
         self.concept = concept
         self.totalPrice = totalPrice
+        self.previousHash = previousHash
+        self.hash = hash
     }
 }
