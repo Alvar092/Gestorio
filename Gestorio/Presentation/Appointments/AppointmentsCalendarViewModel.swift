@@ -6,6 +6,7 @@ final class AppointmentsCalendarViewModel {
     private let fetchAppointmentsUseCase: FetchAppointmentsUseCaseProtocol
     private let fetchClientsUseCase: FetchClientsUseCaseProtocol
     private let calendar = Calendar.current
+    private let upcomingLimit = 5
 
     var displayedMonth: Date
     private(set) var appointments: [Appointment] = []
@@ -41,6 +42,14 @@ final class AppointmentsCalendarViewModel {
 
     var datesWithAppointments: Set<Date> {
         Set(appointments.map { calendar.startOfDay(for: $0.date) })
+    }
+
+    func upcomingAppointments(from now: Date = .now) -> [Appointment] {
+        appointments
+            .filter { $0.date >= now && $0.status == .pending }
+            .sorted { $0.date < $1.date }
+            .prefix(upcomingLimit)
+            .map { $0 }
     }
 
     func appointments(on date: Date) -> [Appointment] {
