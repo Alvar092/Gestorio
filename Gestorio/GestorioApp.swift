@@ -12,7 +12,7 @@ import SwiftData
 struct GestorioApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
         }
         .modelContainer(PersistenceController.shared.container)
     }

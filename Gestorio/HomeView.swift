@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  HomeView.swift
 //  Gestorio
 //
 //  Created by Álvaro Entrena Casas on 08/07/2026.
@@ -7,9 +7,14 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct HomeView: View {
     var body: some View {
         TabView {
+            DashboardView()
+                .tabItem {
+                    Label("Inicio", systemImage: "house")
+                }
+
             AppointmentsCalendarView()
                 .tabItem {
                     Label("Calendario", systemImage: "calendar")
@@ -20,14 +25,14 @@ struct ContentView: View {
                     Label("Clientes", systemImage: "person.2")
                 }
 
-            InvoicesView()
+            ActivityView()
                 .tabItem {
-                    Label("Facturas", systemImage: "doc.text")
+                    Label("Actividad", systemImage: "list.bullet.rectangle")
                 }
         }
     }
 }
 
 #Preview {
-    ContentView()
+    HomeView()
 }
