@@ -5,8 +5,8 @@ struct AppointmentFormView: View {
     @Environment(\.dismiss) private var dismiss
     private let onSave: () -> Void
 
-    init(initialDate: Date = .now, onSave: @escaping () -> Void) {
-        _viewModel = State(initialValue: AppointmentFormViewModel(initialDate: initialDate))
+    init(appointment: Appointment? = nil, initialDate: Date = .now, onSave: @escaping () -> Void) {
+        _viewModel = State(initialValue: AppointmentFormViewModel(appointment: appointment, initialDate: initialDate))
         self.onSave = onSave
     }
 
@@ -14,7 +14,7 @@ struct AppointmentFormView: View {
         NavigationStack {
             Form {
                 Section("Cliente") {
-                    if viewModel.clients.isEmpty {
+                    if viewModel.didLoadClients && viewModel.clients.isEmpty {
                         Text("Primero crea un cliente en la pestaña Clientes.")
                             .foregroundStyle(.secondary)
                     } else {
@@ -56,7 +56,7 @@ struct AppointmentFormView: View {
                     }
                 }
             }
-            .navigationTitle("Nuevo evento")
+            .navigationTitle(viewModel.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

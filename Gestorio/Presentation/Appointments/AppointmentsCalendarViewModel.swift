@@ -58,6 +58,10 @@ final class AppointmentsCalendarViewModel {
             .sorted { $0.date < $1.date }
     }
 
+    func appointment(id: UUID) -> Appointment? {
+        appointments.first { $0.id == id }
+    }
+
     func clientName(for appointment: Appointment) -> String {
         clientsByID[appointment.clientID]?.name ?? "Cliente desconocido"
     }

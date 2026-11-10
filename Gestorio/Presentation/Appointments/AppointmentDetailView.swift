@@ -3,6 +3,12 @@ import SwiftUI
 struct AppointmentDetailView: View {
     let appointment: Appointment
     let clientName: String
+    let onSaved: () -> Void
+    @State private var isEditing = false
+
+    private var canEdit: Bool {
+        appointment.invoiceID == nil && appointment.status != .invoiced
+    }
 
     var body: some View {
         Form {
@@ -26,6 +32,16 @@ struct AppointmentDetailView: View {
             }
         }
         .navigationTitle(appointment.service)
+        .toolbar {
+            if canEdit {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Editar") { isEditing = true }
+                }
+            }
+        }
+        .sheet(isPresented: $isEditing) {
+            AppointmentFormView(appointment: appointment, onSave: onSaved)
+        }
     }
 }
 
@@ -39,7 +55,8 @@ struct AppointmentDetailView: View {
                 service: "Consulta",
                 price: 50
             ),
-            clientName: "Cliente de ejemplo"
+            clientName: "Cliente de ejemplo",
+            onSaved: {}
         )
     }
 }

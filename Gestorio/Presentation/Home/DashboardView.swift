@@ -16,9 +16,11 @@ struct DashboardView: View {
             }
             .navigationTitle("Inicio")
             .navigationDestination(for: Appointment.self) { appointment in
+                let current = viewModel.appointment(id: appointment.id) ?? appointment
                 AppointmentDetailView(
-                    appointment: appointment,
-                    clientName: viewModel.clientName(for: appointment)
+                    appointment: current,
+                    clientName: viewModel.clientName(for: current),
+                    onSaved: { viewModel.load() }
                 )
             }
         }

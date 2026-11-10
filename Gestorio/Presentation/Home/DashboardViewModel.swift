@@ -46,6 +46,10 @@ final class DashboardViewModel {
         }
     }
 
+    func appointment(id: UUID) -> Appointment? {
+        upcomingAppointments.first { $0.id == id }
+    }
+
     func clientName(for appointment: Appointment) -> String {
         clientsByID[appointment.clientID]?.name ?? "Cliente desconocido"
     }

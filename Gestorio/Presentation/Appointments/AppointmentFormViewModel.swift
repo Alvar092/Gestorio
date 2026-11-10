@@ -4,34 +4,54 @@ import Foundation
 @Observable
 final class AppointmentFormViewModel {
     private let createAppointmentUseCase: CreateAppointmentUseCaseProtocol
+    private let updateAppointmentUseCase: UpdateAppointmentUseCaseProtocol
     private let fetchClientsUseCase: FetchClientsUseCaseProtocol
+    private let editingAppointment: Appointment?
 
     private(set) var clients: [Client] = []
+    private(set) var didLoadClients = false
     var clientID: UUID?
     var date: Date
-    var durationMinutes = 60
-    var service = ""
-    var priceText = ""
-    var notes = ""
+    var durationMinutes: Int
+    var service: String
+    var priceText: String
+    var notes: String
     var errorMessage: String?
 
     init(
+        appointment: Appointment?,
         createAppointmentUseCase: CreateAppointmentUseCaseProtocol,
+        updateAppointmentUseCase: UpdateAppointmentUseCaseProtocol,
         fetchClientsUseCase: FetchClientsUseCaseProtocol,
         initialDate: Date
     ) {
+        self.editingAppointment = appointment
         self.createAppointmentUseCase = createAppointmentUseCase
+        self.updateAppointmentUseCase = updateAppointmentUseCase
         self.fetchClientsUseCase = fetchClientsUseCase
-        self.date = initialDate
+        self.clientID = appointment?.clientID
+        self.date = appointment?.date ?? initialDate
+        self.durationMinutes = appointment?.durationMinutes ?? 60
+        self.service = appointment?.service ?? ""
+        self.priceText = appointment.map {
+            $0.price.formatted(.number.precision(.fractionLength(0...2)).grouping(.never))
+        } ?? ""
+        self.notes = appointment?.notes ?? ""
     }
 
-    convenience init(initialDate: Date = .now) {
+    convenience init(appointment: Appointment? = nil, initialDate: Date = .now) {
         self.init(
+            appointment: appointment,
             createAppointmentUseCase: CreateAppointmentUseCase(),
+            updateAppointmentUseCase: UpdateAppointmentUseCase(),
             fetchClientsUseCase: FetchClientsUseCase(),
             initialDate: initialDate
         )
     }
+
+    var isEditing: Bool { editingAppointment != nil }
+
+    var title: String { isEditing ? "Editar evento" : "Nuevo evento" }
 
     var canSave: Bool {
         clientID != nil
@@ -71,6 +91,7 @@ final class AppointmentFormViewModel {
         do {
             clients = try fetchClientsUseCase.fetchClients()
                 .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            didLoadClients = true
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
@@ -82,15 +103,22 @@ final class AppointmentFormViewModel {
         guard canSave, let clientID, let price else { return false }
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         let appointment = Appointment(
+            id: editingAppointment?.id ?? UUID(),
             clientID: clientID,
             date: date,
             durationMinutes: durationMinutes,
             service: service.trimmingCharacters(in: .whitespacesAndNewlines),
             price: price,
+            status: editingAppointment?.status ?? .pending,
+            invoiceID: editingAppointment?.invoiceID,
             notes: trimmedNotes.isEmpty ? nil : trimmedNotes
         )
         do {
-            _ = try createAppointmentUseCase.createAppointment(appointment)
+            if isEditing {
+                _ = try updateAppointmentUseCase.updateAppointment(appointment)
+            } else {
+                _ = try createAppointmentUseCase.createAppointment(appointment)
+            }
             errorMessage = nil
             return true
         } catch {
