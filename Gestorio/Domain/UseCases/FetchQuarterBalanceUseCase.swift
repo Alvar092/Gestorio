@@ -42,7 +42,11 @@ final class FetchQuarterBalanceUseCase: FetchQuarterBalanceUseCaseProtocol {
             .filter { interval.contains($0.date) }
             .reduce(Decimal.zero) { $0 + $1.totalPrice }
         let pending = try appointmentRepository.fetchAll()
-            .filter { interval.contains($0.date) && $0.status == .completed && $0.invoiceID == nil }
+            .filter {
+                interval.contains($0.date)
+                    && ($0.status == .completed || $0.isChargeableCancellation)
+                    && $0.invoiceID == nil
+            }
             .reduce(Decimal.zero) { $0 + $1.price }
 
         return QuarterBalance(

@@ -7,6 +7,14 @@ enum AppointmentStatus: String, Codable, CaseIterable {
     case cancelled
 }
 
+/// Motivo de una cancelación; determina si la cita se cobra.
+enum CancellationKind: String, Codable, CaseIterable {
+    /// Cancelación justificada: no se cobra.
+    case justified
+    /// Cancelación sin justificar: se cobra.
+    case unjustified
+}
+
 struct Appointment: Identifiable, Hashable {
     let id: UUID
     var clientID: UUID
@@ -17,6 +25,8 @@ struct Appointment: Identifiable, Hashable {
     var status: AppointmentStatus
     var invoiceID: UUID?
     var notes: String?
+    /// Solo tiene valor cuando `status == .cancelled`.
+    var cancellationKind: CancellationKind?
 
     init(
         id: UUID = UUID(),
@@ -27,7 +37,8 @@ struct Appointment: Identifiable, Hashable {
         price: Decimal,
         status: AppointmentStatus = .pending,
         invoiceID: UUID? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        cancellationKind: CancellationKind? = nil
     ) {
         self.id = id
         self.clientID = clientID
@@ -38,5 +49,11 @@ struct Appointment: Identifiable, Hashable {
         self.status = status
         self.invoiceID = invoiceID
         self.notes = notes
+        self.cancellationKind = cancellationKind
+    }
+
+    /// Cita cancelada sin justificar: se cobra como si se hubiera realizado.
+    var isChargeableCancellation: Bool {
+        status == .cancelled && cancellationKind == .unjustified
     }
 }

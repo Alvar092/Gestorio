@@ -5,6 +5,7 @@ import Foundation
 final class AppointmentFormViewModel {
     private let createAppointmentUseCase: CreateAppointmentUseCaseProtocol
     private let updateAppointmentUseCase: UpdateAppointmentUseCaseProtocol
+    private let deleteAppointmentUseCase: DeleteAppointmentUseCaseProtocol
     private let fetchClientsUseCase: FetchClientsUseCaseProtocol
     private let editingAppointment: Appointment?
 
@@ -22,12 +23,14 @@ final class AppointmentFormViewModel {
         appointment: Appointment?,
         createAppointmentUseCase: CreateAppointmentUseCaseProtocol,
         updateAppointmentUseCase: UpdateAppointmentUseCaseProtocol,
+        deleteAppointmentUseCase: DeleteAppointmentUseCaseProtocol,
         fetchClientsUseCase: FetchClientsUseCaseProtocol,
         initialDate: Date
     ) {
         self.editingAppointment = appointment
         self.createAppointmentUseCase = createAppointmentUseCase
         self.updateAppointmentUseCase = updateAppointmentUseCase
+        self.deleteAppointmentUseCase = deleteAppointmentUseCase
         self.fetchClientsUseCase = fetchClientsUseCase
         self.clientID = appointment?.clientID
         self.date = appointment?.date ?? initialDate
@@ -44,6 +47,7 @@ final class AppointmentFormViewModel {
             appointment: appointment,
             createAppointmentUseCase: CreateAppointmentUseCase(),
             updateAppointmentUseCase: UpdateAppointmentUseCase(),
+            deleteAppointmentUseCase: DeleteAppointmentUseCase(),
             fetchClientsUseCase: FetchClientsUseCase(),
             initialDate: initialDate
         )
@@ -52,6 +56,10 @@ final class AppointmentFormViewModel {
     var isEditing: Bool { editingAppointment != nil }
 
     var title: String { isEditing ? "Editar evento" : "Nuevo evento" }
+
+    /// Eliminar y cancelar solo existen al editar; cancelar además no aplica a una cita ya cancelada.
+    var canDelete: Bool { isEditing }
+    var canCancel: Bool { isEditing && editingAppointment?.status != .cancelled }
 
     var canSave: Bool {
         clientID != nil
@@ -100,6 +108,30 @@ final class AppointmentFormViewModel {
 
     /// Devuelve `true` si se guardó correctamente.
     func save() -> Bool {
+        persist(status: editingAppointment?.status ?? .pending,
+                cancellationKind: editingAppointment?.cancellationKind)
+    }
+
+    /// Cancela la cita guardando también los datos del formulario. `true` si se guardó.
+    func cancel(kind: CancellationKind) -> Bool {
+        guard canCancel else { return false }
+        return persist(status: .cancelled, cancellationKind: kind)
+    }
+
+    /// Elimina definitivamente la cita. `true` si se eliminó.
+    func delete() -> Bool {
+        guard let editingAppointment else { return false }
+        do {
+            try deleteAppointmentUseCase.deleteAppointment(id: editingAppointment.id)
+            errorMessage = nil
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    private func persist(status: AppointmentStatus, cancellationKind: CancellationKind?) -> Bool {
         guard canSave, let clientID, let price else { return false }
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         let appointment = Appointment(
@@ -109,9 +141,10 @@ final class AppointmentFormViewModel {
             durationMinutes: durationMinutes,
             service: service.trimmingCharacters(in: .whitespacesAndNewlines),
             price: price,
-            status: editingAppointment?.status ?? .pending,
+            status: status,
             invoiceID: editingAppointment?.invoiceID,
-            notes: trimmedNotes.isEmpty ? nil : trimmedNotes
+            notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+            cancellationKind: cancellationKind
         )
         do {
             if isEditing {

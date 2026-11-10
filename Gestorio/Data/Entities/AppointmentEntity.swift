@@ -12,6 +12,7 @@ final class AppointmentEntity {
     var status: AppointmentStatus
     var invoiceID: UUID?
     var notes: String?
+    var cancellationKind: CancellationKind?
 
     init(
         id: UUID,
@@ -22,7 +23,8 @@ final class AppointmentEntity {
         price: Decimal,
         status: AppointmentStatus,
         invoiceID: UUID?,
-        notes: String?
+        notes: String?,
+        cancellationKind: CancellationKind? = nil
     ) {
         self.id = id
         self.clientID = clientID
@@ -33,5 +35,6 @@ final class AppointmentEntity {
         self.status = status
         self.invoiceID = invoiceID
         self.notes = notes
+        self.cancellationKind = cancellationKind
     }
 }

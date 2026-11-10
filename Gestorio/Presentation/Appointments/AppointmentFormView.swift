@@ -3,11 +3,15 @@ import SwiftUI
 struct AppointmentFormView: View {
     @State private var viewModel: AppointmentFormViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var isConfirmingDelete = false
+    @State private var isChoosingCancellation = false
     private let onSave: () -> Void
+    private let onDelete: () -> Void
 
-    init(appointment: Appointment? = nil, initialDate: Date = .now, onSave: @escaping () -> Void) {
+    init(appointment: Appointment? = nil, initialDate: Date = .now, onSave: @escaping () -> Void, onDelete: @escaping () -> Void = {}) {
         _viewModel = State(initialValue: AppointmentFormViewModel(appointment: appointment, initialDate: initialDate))
         self.onSave = onSave
+        self.onDelete = onDelete
     }
 
     var body: some View {
@@ -49,6 +53,18 @@ struct AppointmentFormView: View {
                         .lineLimit(3...6)
                 }
 
+                if viewModel.canDelete || viewModel.canCancel {
+                    Section {
+                        if viewModel.canCancel {
+                            Button("Cancelar cita") { isChoosingCancellation = true }
+                                .disabled(!viewModel.canSave)
+                        }
+                        if viewModel.canDelete {
+                            Button("Eliminar cita", role: .destructive) { isConfirmingDelete = true }
+                        }
+                    }
+                }
+
                 if let errorMessage = viewModel.errorMessage {
                     Section {
                         Text(errorMessage)
@@ -73,8 +89,41 @@ struct AppointmentFormView: View {
                 }
             }
         }
+        .confirmationDialog(
+            "¿Eliminar esta cita?",
+            isPresented: $isConfirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button("Eliminar", role: .destructive) {
+                if viewModel.delete() {
+                    onDelete()
+                    dismiss()
+                }
+            }
+            Button("Volver", role: .cancel) {}
+        } message: {
+            Text("Esta acción no se puede deshacer.")
+        }
+        .confirmationDialog(
+            "¿La cancelación está justificada?",
+            isPresented: $isChoosingCancellation,
+            titleVisibility: .visible
+        ) {
+            Button("Justificada (no se cobra)") { cancel(.justified) }
+            Button("Sin justificar (se cobra)") { cancel(.unjustified) }
+            Button("Volver", role: .cancel) {}
+        }
         .task {
             viewModel.loadClients()
+        }
+    }
+}
+
+private extension AppointmentFormView {
+    func cancel(_ kind: CancellationKind) {
+        if viewModel.cancel(kind: kind) {
+            onSave()
+            dismiss()
         }
     }
 }

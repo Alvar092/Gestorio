@@ -82,7 +82,8 @@ private extension AppointmentEntity {
             price: appointment.price,
             status: appointment.status,
             invoiceID: appointment.invoiceID,
-            notes: appointment.notes
+            notes: appointment.notes,
+            cancellationKind: appointment.cancellationKind
         )
     }
 
@@ -95,6 +96,7 @@ private extension AppointmentEntity {
         status = appointment.status
         invoiceID = appointment.invoiceID
         notes = appointment.notes
+        cancellationKind = appointment.cancellationKind
     }
 
     var domain: Appointment {
@@ -107,7 +109,8 @@ private extension AppointmentEntity {
             price: price,
             status: status,
             invoiceID: invoiceID,
-            notes: notes
+            notes: notes,
+            cancellationKind: cancellationKind
         )
     }
 }

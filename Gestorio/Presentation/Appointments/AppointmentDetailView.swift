@@ -5,6 +5,7 @@ struct AppointmentDetailView: View {
     let clientName: String
     let onSaved: () -> Void
     @State private var isEditing = false
+    @Environment(\.dismiss) private var dismiss
 
     private var canEdit: Bool {
         appointment.invoiceID == nil && appointment.status != .invoiced
@@ -23,6 +24,12 @@ struct AppointmentDetailView: View {
                 LabeledContent("Servicio", value: appointment.service)
                 LabeledContent("Precio", value: appointment.price.formatted(.currency(code: "EUR")))
                 LabeledContent("Estado", value: appointment.status.rawValue)
+                if appointment.status == .cancelled, let kind = appointment.cancellationKind {
+                    LabeledContent(
+                        "Cancelación",
+                        value: kind == .justified ? "Justificada (no se cobra)" : "Sin justificar (se cobra)"
+                    )
+                }
             }
 
             if let notes = appointment.notes, !notes.isEmpty {
@@ -40,7 +47,14 @@ struct AppointmentDetailView: View {
             }
         }
         .sheet(isPresented: $isEditing) {
-            AppointmentFormView(appointment: appointment, onSave: onSaved)
+            AppointmentFormView(
+                appointment: appointment,
+                onSave: onSaved,
+                onDelete: {
+                    onSaved()
+                    dismiss()
+                }
+            )
         }
     }
 }
