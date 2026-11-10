@@ -70,7 +70,7 @@ private extension CorrectiveInvoiceEntity {
             originalInvoiceNumber: correctiveInvoice.originalInvoiceNumber,
             originalInvoiceHash: correctiveInvoice.originalInvoiceHash,
             previousHash: correctiveInvoice.previousHash,
-            hash: correctiveInvoice.hash
+            recordHash: correctiveInvoice.hash
         )
     }
 
@@ -86,7 +86,7 @@ private extension CorrectiveInvoiceEntity {
             originalInvoiceNumber: originalInvoiceNumber,
             originalInvoiceHash: originalInvoiceHash,
             previousHash: previousHash,
-            hash: hash
+            hash: recordHash
         )
     }
 }

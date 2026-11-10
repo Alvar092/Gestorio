@@ -12,6 +12,8 @@ final class PersistenceController {
             InvoiceEntity.self,
             CorrectiveInvoiceEntity.self,
             HashChainPointerEntity.self,
+            ExpenseEntity.self,
+            IssuerProfileEntity.self,
         ])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

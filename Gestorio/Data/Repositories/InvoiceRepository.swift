@@ -63,12 +63,17 @@ private extension InvoiceEntity {
             id: invoice.id,
             number: invoice.number,
             date: invoice.date,
+            issuerName: invoice.issuerName,
+            issuerTaxID: invoice.issuerTaxID,
             clientName: invoice.clientName,
             clientTaxID: invoice.clientTaxID,
             concept: invoice.concept,
+            taxBase: invoice.taxBase,
+            vatRate: invoice.vatRate,
+            irpfRate: invoice.irpfRate,
             totalPrice: invoice.totalPrice,
             previousHash: invoice.previousHash,
-            hash: invoice.hash
+            recordHash: invoice.hash
         )
     }
 
@@ -77,12 +82,17 @@ private extension InvoiceEntity {
             id: id,
             number: number,
             date: date,
+            issuerName: issuerName,
+            issuerTaxID: issuerTaxID,
             clientName: clientName,
             clientTaxID: clientTaxID,
             concept: concept,
+            taxBase: taxBase,
+            vatRate: vatRate,
+            irpfRate: irpfRate,
             totalPrice: totalPrice,
             previousHash: previousHash,
-            hash: hash
+            hash: recordHash
         )
     }
 }

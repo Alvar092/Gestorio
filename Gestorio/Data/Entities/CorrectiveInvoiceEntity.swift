@@ -13,7 +13,7 @@ final class CorrectiveInvoiceEntity {
     var originalInvoiceNumber: String
     var originalInvoiceHash: String
     var previousHash: String
-    var hash: String
+    var recordHash: String
 
     init(
         id: UUID,
@@ -26,7 +26,7 @@ final class CorrectiveInvoiceEntity {
         originalInvoiceNumber: String,
         originalInvoiceHash: String,
         previousHash: String,
-        hash: String
+        recordHash: String
     ) {
         self.id = id
         self.number = number
@@ -38,6 +38,6 @@ final class CorrectiveInvoiceEntity {
         self.originalInvoiceNumber = originalInvoiceNumber
         self.originalInvoiceHash = originalInvoiceHash
         self.previousHash = previousHash
-        self.hash = hash
+        self.recordHash = recordHash
     }
 }
