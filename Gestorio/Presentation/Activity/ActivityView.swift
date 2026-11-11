@@ -33,6 +33,17 @@ struct ActivityView: View {
                     }
                 }
             }
+            .navigationDestination(for: UUID.self) { id in
+                if let invoice = viewModel.invoice(id: id) {
+                    InvoiceDetailView(
+                        invoice: invoice,
+                        correctiveInvoices: viewModel.correctiveInvoices(for: invoice),
+                        onChanged: viewModel.load
+                    )
+                } else if let expense = viewModel.expense(id: id) {
+                    ExpenseDetailView(expense: expense, onSaved: viewModel.load)
+                }
+            }
             .sheet(item: $creatingKind) { kind in
                 ActivityEntryFormView(kind: kind, onSave: viewModel.load)
             }
@@ -53,12 +64,14 @@ struct ActivityView: View {
                 ContentUnavailableView("Sin ingresos", systemImage: "arrow.down.circle", description: Text("Pulsa + para crear tu primera factura."))
             } else {
                 List(viewModel.invoices) { invoice in
-                    ActivityRow(
-                        title: invoice.concept,
-                        subtitle: "\(invoice.number) · \(invoice.clientName)",
-                        date: invoice.date,
-                        amount: invoice.totalPrice
-                    )
+                    NavigationLink(value: invoice.id) {
+                        ActivityRow(
+                            title: invoice.concept,
+                            subtitle: "\(invoice.number) · \(invoice.clientName)",
+                            date: invoice.date,
+                            amount: invoice.totalPrice
+                        )
+                    }
                 }
             }
         case .expense:
@@ -66,12 +79,14 @@ struct ActivityView: View {
                 ContentUnavailableView("Sin gastos", systemImage: "arrow.up.circle", description: Text("Pulsa + para registrar tu primer gasto."))
             } else {
                 List(viewModel.expenses) { expense in
-                    ActivityRow(
-                        title: expense.concept,
-                        subtitle: expense.issuerName,
-                        date: expense.date,
-                        amount: -expense.totalPrice
-                    )
+                    NavigationLink(value: expense.id) {
+                        ActivityRow(
+                            title: expense.concept,
+                            subtitle: expense.issuerName,
+                            date: expense.date,
+                            amount: -expense.totalPrice
+                        )
+                    }
                 }
             }
         }

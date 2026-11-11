@@ -5,6 +5,7 @@ import SwiftData
 protocol ExpenseRepositoryProtocol {
     func fetchAll() throws -> [Expense]
     func create(_ expense: Expense) throws -> Expense
+    func update(_ expense: Expense) throws -> Expense
 }
 
 @MainActor
@@ -30,9 +31,34 @@ final class ExpenseRepository: ExpenseRepositoryProtocol {
         try modelContext.save()
         return entity.domain
     }
+
+    func update(_ expense: Expense) throws -> Expense {
+        let id = expense.id
+        var descriptor = FetchDescriptor<ExpenseEntity>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        guard let entity = try modelContext.fetch(descriptor).first else {
+            throw RepositoryError.notFound
+        }
+        entity.update(from: expense)
+        try modelContext.save()
+        return entity.domain
+    }
 }
 
 private extension ExpenseEntity {
+    func update(from expense: Expense) {
+        date = expense.date
+        issuerName = expense.issuerName
+        issuerTaxID = expense.issuerTaxID
+        recipientName = expense.recipientName
+        recipientTaxID = expense.recipientTaxID
+        concept = expense.concept
+        taxBase = expense.taxBase
+        vatRate = expense.vatRate
+        irpfRate = expense.irpfRate
+        totalPrice = expense.totalPrice
+    }
+
     convenience init(expense: Expense) {
         self.init(
             id: expense.id,

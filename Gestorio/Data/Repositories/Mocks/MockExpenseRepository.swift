@@ -14,4 +14,13 @@ final class MockExpenseRepository: ExpenseRepositoryProtocol {
         expenses.append(expense)
         return expense
     }
+
+    func update(_ expense: Expense) throws -> Expense {
+        if let errorToThrow { throw errorToThrow }
+        guard let index = expenses.firstIndex(where: { $0.id == expense.id }) else {
+            throw RepositoryError.notFound
+        }
+        expenses[index] = expense
+        return expense
+    }
 }

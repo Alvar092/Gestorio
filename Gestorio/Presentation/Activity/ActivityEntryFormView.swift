@@ -6,15 +6,15 @@ struct ActivityEntryFormView: View {
     @Environment(\.dismiss) private var dismiss
     private let onSave: () -> Void
 
-    init(kind: ActivityKind, onSave: @escaping () -> Void) {
-        _viewModel = State(initialValue: ActivityEntryFormViewModel(kind: kind))
+    init(kind: ActivityKind, editing expense: Expense? = nil, onSave: @escaping () -> Void) {
+        _viewModel = State(initialValue: ActivityEntryFormViewModel(kind: kind, editing: expense))
         self.onSave = onSave
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                if viewModel.profile == nil {
+                if viewModel.profile == nil, !viewModel.isEditing {
                     Section {
                         Text("Para crear facturas necesitas indicar tus datos fiscales.")
                             .foregroundStyle(.secondary)
@@ -28,7 +28,9 @@ struct ActivityEntryFormView: View {
                     counterpartySection(title: "Destinatario", showsClientPicker: true)
                 case .expense:
                     counterpartySection(title: "Emisor (proveedor)", showsClientPicker: false)
-                    profileSection(title: "Destinatario (tú)")
+                    if !viewModel.isEditing {
+                        profileSection(title: "Destinatario (tú)")
+                    }
                 }
 
                 Section("Factura") {
@@ -38,8 +40,16 @@ struct ActivityEntryFormView: View {
                 }
 
                 Section("Importe") {
+                    if viewModel.allowsTotalInput {
+                        Picker("Importe", selection: $viewModel.amountInput) {
+                            ForEach(ActivityEntryFormViewModel.AmountInput.allCases) { input in
+                                Text(input.title).tag(input)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
                     HStack {
-                        Text("Base imponible")
+                        Text(viewModel.allowsTotalInput ? viewModel.amountInput.title : "Base imponible")
                         TextField("0,00", text: $viewModel.baseText)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
