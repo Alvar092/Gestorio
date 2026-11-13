@@ -41,10 +41,12 @@ final class ActivityEntryFormViewModel {
     var counterpartyTaxID = ""
     var date: Date
     var concept = ""
+    /// Solo se usa en gastos.
+    var category: ExpenseCategory = .other
     /// Importe tecleado; se interpreta como base o como total según `amountInput`.
     var baseText = ""
     var amountInput: AmountInput = .base
-    var vatRate: Decimal = 21
+    var vatRate: Decimal = 0
     var hasIRPF = false
     var irpfRate: Decimal = 15
     var errorMessage: String?
@@ -73,6 +75,7 @@ final class ActivityEntryFormViewModel {
             counterpartyTaxID = expense.issuerTaxID
             date = expense.date
             concept = expense.concept
+            category = expense.category
             baseText = expense.taxBase.formatted(.number.grouping(.never).precision(.fractionLength(0...2)))
             vatRate = expense.vatRate
             hasIRPF = expense.irpfRate > 0
@@ -177,6 +180,7 @@ final class ActivityEntryFormViewModel {
                 updated.issuerName = name
                 updated.issuerTaxID = taxID
                 updated.concept = trimmed(concept)
+                updated.category = category
                 updated.taxBase = breakdown.base
                 updated.vatRate = breakdown.vatRate
                 updated.irpfRate = breakdown.irpfRate
@@ -209,6 +213,7 @@ final class ActivityEntryFormViewModel {
                     recipientName: profile.name,
                     recipientTaxID: profile.taxID,
                     concept: trimmed(concept),
+                    category: category,
                     taxBase: breakdown.base,
                     vatRate: breakdown.vatRate,
                     irpfRate: breakdown.irpfRate,

@@ -10,6 +10,7 @@ struct ExpenseDetailView: View {
         Form {
             Section("Factura") {
                 LabeledContent("Fecha", value: expense.date.formatted(date: .long, time: .omitted))
+                LabeledContent("Categoría", value: expense.category.title)
                 Text(expense.concept)
             }
 

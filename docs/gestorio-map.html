@@ -1,0 +1,483 @@
+<title>Mapa de Gestorio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+  /* Layout: cabecera con leyenda de capas; navegación (árbol por pestaña) junto a un panel sticky de dependencias; debajo, recorridos paso a paso de cada acción. */
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --ink: #172033;
+    --muted: #5d677a;
+    --line: #dde1e8;
+    --select: #172033;
+    --pres: #2b5fd0;
+    --dom: #1b8758;
+    --data: #a9650a;
+    --infra: #7448b0;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1420; --surface: #171e2e; --ink: #e8ecf5; --muted: #98a3b8; --line: #2a3347; --select: #e8ecf5;
+      --pres: #7ea2ff; --dom: #56c996; --data: #e8a84f; --infra: #bb9ae8;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1420; --surface: #171e2e; --ink: #e8ecf5; --muted: #98a3b8; --line: #2a3347; --select: #e8ecf5;
+    --pres: #7ea2ff; --dom: #56c996; --data: #e8a84f; --infra: #bb9ae8;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+    padding-block: 28px 56px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+  h1 { font-size: 30px; line-height: 1.15; }
+  h2 { font-size: 20px; }
+  p { margin: 0; }
+  code, .mono { font-family: var(--font-mono); font-size: 12.5px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--pres); outline-offset: 2px; }
+
+  /* Header */
+  header { display: flex; flex-direction: column; gap: 14px; }
+  header p { color: var(--muted); max-width: 68ch; }
+  .layers { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+  .layer-chip {
+    display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+    font-size: 12.5px; font-weight: 500;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+  .arrow { color: var(--muted); }
+  .edge-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--muted); font-size: 12.5px; align-items: center; }
+
+  /* Navigation + panel */
+  .explore { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (min-width: 1020px) { .explore { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } .panel { position: sticky; top: 16px; } }
+  .section-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+  .section-head p { color: var(--muted); max-width: 70ch; }
+
+  .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .tab { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .tab-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .tab-title h3 { font-size: 15px; }
+  .tab-title span { font-size: 11.5px; color: var(--muted); font-family: var(--font-mono); }
+  .tree, .tree ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .tree ul { margin-top: 6px; margin-left: 10px; padding-left: 10px; border-left: 1px dashed var(--line); }
+  .node-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+  .edge { font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; flex: none; }
+  .edge.push { border: 1px solid var(--muted); color: var(--muted); }
+  .edge.sheet { background: var(--muted); color: var(--surface); }
+  .node {
+    border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 8px;
+    font-family: var(--font-mono); font-size: 12px; text-align: left; min-width: 0; overflow-wrap: anywhere;
+    border-left: 3px solid var(--pres);
+  }
+  .node:hover { border-color: var(--muted); border-left-color: var(--pres); }
+  .node[aria-pressed="true"] { background: var(--select); color: var(--surface); border-color: var(--select); }
+  .node.repeat { border-style: dashed; opacity: 0.8; }
+  .node.repeat::after { content: " ↻"; }
+
+  /* Panel */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .panel-head { display: flex; flex-direction: column; gap: 4px; }
+  .panel-head .mono { font-size: 15px; font-weight: 500; }
+  .panel-head p { color: var(--muted); }
+  .chain { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  @media (min-width: 560px) { .chain { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } }
+  .col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .col-label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .item {
+    border: 1px solid var(--line); border-left: 3px solid var(--c); border-radius: 6px; padding: 5px 8px;
+    background: color-mix(in srgb, var(--c) 8%, var(--surface));
+    display: flex; flex-direction: column; gap: 1px; min-width: 0;
+  }
+  .item .mono { overflow-wrap: anywhere; font-size: 11.5px; }
+  .item small { color: var(--muted); font-size: 11px; font-family: var(--font-mono); overflow-wrap: anywhere; }
+  .empty { color: var(--muted); font-size: 12px; font-style: italic; }
+  .opens { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .opens h3 { font-size: 13px; }
+  .opens ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .opens li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .opens li span.why { color: var(--muted); font-size: 12.5px; }
+  .note { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 12px; }
+
+  /* Actions */
+  .action-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .pick { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 500; }
+  .pick:hover { border-color: var(--muted); }
+  .pick[aria-pressed="true"] { background: var(--select); color: var(--surface); border-color: var(--select); }
+  .flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .flow > p { color: var(--muted); max-width: 72ch; }
+  .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 14px; }
+  .step:last-child { padding-bottom: 0; }
+  .step::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
+  .step:last-child::before { display: none; }
+  .step .n {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--c); background: var(--surface);
+    display: grid; place-items: center; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--c);
+  }
+  .step .body { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 3px; }
+  .step .top { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+  .step .layer { font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--c); }
+  .step code { overflow-wrap: anywhere; }
+  .step .desc { color: var(--muted); }
+  .rule { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--bg); color: var(--muted); font-size: 12.5px; }
+  .rule strong { color: var(--ink); font-weight: 600; }
+
+  footer { color: var(--muted); font-size: 12.5px; }
+  @media (prefers-reduced-motion: no-preference) { .node, .pick { transition: background 0.12s, border-color 0.12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Mapa de Gestorio</h1>
+    <p>Qué pantallas hay, cómo se llega de una a otra y qué ViewModel, caso de uso, repositorio y entidad hay detrás de cada una. Pulsa una pantalla para ver con quién se comunica, o elige una acción para seguirla paso a paso.</p>
+    <div class="layers" aria-label="Capas de la arquitectura">
+      <span class="layer-chip"><span class="dot" style="--c: var(--pres)"></span>Presentation</span><span class="arrow">→</span>
+      <span class="layer-chip"><span class="dot" style="--c: var(--dom)"></span>Domain</span><span class="arrow">→</span>
+      <span class="layer-chip"><span class="dot" style="--c: var(--data)"></span>Data</span><span class="arrow">→</span>
+      <span class="layer-chip"><span class="dot" style="--c: var(--infra)"></span>SwiftData / Infrastructure</span>
+    </div>
+    <div class="edge-legend">
+      <span><span class="edge push">push</span> navega dentro de la pila (NavigationStack)</span>
+      <span><span class="edge sheet">sheet</span> se abre como hoja modal</span>
+      <span><span class="mono">↻</span> pantalla ya dibujada en otro punto</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>Navegación y dependencias</h2>
+      <p><code>HomeView</code> es un <code>TabView</code> con cuatro pestañas. Cada pestaña tiene su propio NavigationStack.</p>
+    </div>
+    <div class="explore">
+      <div class="tabs" id="tabs"></div>
+      <aside class="panel" id="panel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Recorrido de una acción</h2>
+      <p>Qué función llama a cuál, de la pantalla al almacenamiento. El orden de los pasos es el orden real de ejecución.</p>
+    </div>
+    <div class="action-picker" id="picker" role="group" aria-label="Acciones"></div>
+    <div class="flow" id="flow" aria-live="polite"></div>
+  </section>
+
+  <footer>Generado a partir del código del 11-nov-2026. Cada capa solo conoce el protocolo de la capa inmediatamente inferior; los ViewModels resuelven su grafo con <code>convenience init()</code>.</footer>
+</div>
+
+<script>
+(function () {
+  var LAYER = { pres: 'var(--pres)', dom: 'var(--dom)', data: 'var(--data)', infra: 'var(--infra)' };
+
+  /* ---------- Datos ---------- */
+  // Casos de uso → repositorios / infraestructura que usan.
+  var UC = {
+    FetchClientsUseCase:           { repos: ['ClientRepository'] },
+    CreateClientUseCase:           { repos: ['ClientRepository'] },
+    UpdateClientUseCase:           { repos: ['ClientRepository'] },
+    FetchAppointmentsUseCase:      { repos: ['AppointmentRepository'] },
+    CreateAppointmentUseCase:      { repos: ['AppointmentRepository'] },
+    UpdateAppointmentUseCase:      { repos: ['AppointmentRepository'] },
+    DeleteAppointmentUseCase:      { repos: ['AppointmentRepository'] },
+    FetchQuarterBalanceUseCase:    { repos: ['InvoiceRepository', 'CorrectiveInvoiceRepository', 'AppointmentRepository'] },
+    FetchInvoicesUseCase:          { repos: ['InvoiceRepository'] },
+    CreateInvoiceUseCase:          { repos: ['InvoiceRepository', 'InvoiceChainRepository'], infra: ['HashChainSigner'] },
+    FetchExpensesUseCase:          { repos: ['ExpenseRepository'] },
+    CreateExpenseUseCase:          { repos: ['ExpenseRepository'] },
+    UpdateExpenseUseCase:          { repos: ['ExpenseRepository'] },
+    FetchCorrectiveInvoicesUseCase:{ repos: ['CorrectiveInvoiceRepository'] },
+    CreateCorrectiveInvoiceUseCase:{ repos: ['CorrectiveInvoiceRepository', 'InvoiceRepository', 'InvoiceChainRepository'], infra: ['HashChainSigner'] },
+    FetchIssuerProfileUseCase:     { repos: ['IssuerProfileRepository'] },
+    SaveIssuerProfileUseCase:      { repos: ['IssuerProfileRepository'] }
+  };
+  // Repositorios → entidades SwiftData.
+  var REPO = {
+    ClientRepository:            ['ClientEntity'],
+    AppointmentRepository:       ['AppointmentEntity'],
+    InvoiceRepository:           ['InvoiceEntity', 'HashChainPointerEntity'],
+    CorrectiveInvoiceRepository: ['CorrectiveInvoiceEntity', 'HashChainPointerEntity'],
+    InvoiceChainRepository:      ['HashChainPointerEntity'],
+    ExpenseRepository:           ['ExpenseEntity'],
+    IssuerProfileRepository:     ['IssuerProfileEntity']
+  };
+
+  // Pantallas. uc: [caso de uso, método que llama el ViewModel].
+  var S = {
+    DashboardView: { tab: 'Inicio', vm: 'DashboardViewModel',
+      uc: [['FetchAppointmentsUseCase','fetchAppointments()'], ['FetchClientsUseCase','fetchClients()'], ['FetchQuarterBalanceUseCase','fetchBalance(for:)']],
+      opens: [['AppointmentDetailView','push','Toca una cita próxima']],
+      note: 'Muestra el saldo del trimestre y las próximas citas. El ViewModel resuelve la cita actualizada por id tras editar.' },
+    AppointmentDetailView: { tab: 'Detalle de cita', vm: null, uc: [],
+      opens: [['AppointmentFormView','sheet','Botón Editar (oculto si la cita ya está facturada)']],
+      note: 'Sin ViewModel propio: recibe la cita y un cierre onSaved del padre.' },
+    AppointmentsCalendarView: { tab: 'Calendario', vm: 'AppointmentsCalendarViewModel',
+      uc: [['FetchAppointmentsUseCase','fetchAppointments()'], ['FetchClientsUseCase','fetchClients()']],
+      opens: [['AppointmentFormView','sheet','Botón +'], ['DayAppointmentsView','push','Tocar un día del MonthCalendarView'], ['AppointmentDetailView','push','Tocar una cita de la lista de próximas']],
+      note: 'Usa el componente compartido MonthCalendarView (Shared/).' },
+    DayAppointmentsView: { tab: 'Citas del día', vm: null, uc: [],
+      opens: [['AppointmentDetailView','push','Tocar una cita']],
+      note: 'Recibe las citas del día ya filtradas por el calendario.' },
+    AppointmentFormView: { tab: 'Formulario de cita', vm: 'AppointmentFormViewModel',
+      uc: [['CreateAppointmentUseCase','createAppointment(_:)'], ['UpdateAppointmentUseCase','updateAppointment(_:)'], ['DeleteAppointmentUseCase','deleteAppointment(id:)'], ['FetchClientsUseCase','fetchClients()']],
+      opens: [],
+      note: 'save() crea o actualiza según el modo. cancel(kind:) actualiza la cita como cancelada (justificada o no). delete() pide confirmación con un confirmationDialog. Las citas facturadas no se pueden editar.' },
+    ClientsView: { tab: 'Clientes', vm: 'ClientsViewModel',
+      uc: [['FetchClientsUseCase','fetchClients()']],
+      opens: [['ClientFormView','sheet','Botón +'], ['ClientDetailView','push','Tocar un cliente']],
+      note: 'Lista ordenada por nombre.' },
+    ClientDetailView: { tab: 'Detalle de cliente', vm: null, uc: [],
+      opens: [['ClientFormView','sheet','Botón Editar']],
+      note: 'Solo lectura. El borrado de clientes existe como caso de uso (DeleteClientUseCase) pero aún no tiene pantalla.' },
+    ClientFormView: { tab: 'Formulario de cliente', vm: 'ClientFormViewModel',
+      uc: [['CreateClientUseCase','createClient(_:)'], ['UpdateClientUseCase','updateClient(_:)']],
+      opens: [],
+      note: 'Mismo formulario para crear y editar. Nombre y NIF obligatorios.' },
+    ActivityView: { tab: 'Actividad', vm: 'ActivityViewModel',
+      uc: [['FetchInvoicesUseCase','fetchInvoices()'], ['FetchExpensesUseCase','fetchExpenses()'], ['FetchCorrectiveInvoicesUseCase','fetchCorrectiveInvoices()']],
+      opens: [['ActivityEntryFormView','sheet','Menú + → Nuevo ingreso / Nuevo gasto'], ['IssuerProfileFormView','sheet','Botón Mis datos fiscales'], ['InvoiceDetailView','push','Tocar un ingreso'], ['ExpenseDetailView','push','Tocar un gasto']],
+      note: 'Selector Ingresos / Gastos. Las rectificativas se cargan para mostrarlas dentro del detalle de su factura.' },
+    InvoiceDetailView: { tab: 'Detalle de ingreso', vm: null, uc: [],
+      opens: [['CorrectiveInvoiceFormView','sheet','Botón Rectificar (oculto si la factura ya tiene una rectificativa)']],
+      note: 'Las facturas emitidas son append-only: no se editan, se rectifican. Muestra la huella y la huella anterior del registro RRSIF.' },
+    ExpenseDetailView: { tab: 'Detalle de gasto', vm: null, uc: [],
+      opens: [['ActivityEntryFormView','sheet','Botón Editar']],
+      note: 'Los gastos no entran en la cadena de hash, así que se pueden editar.' },
+    ActivityEntryFormView: { tab: 'Formulario de ingreso / gasto', vm: 'ActivityEntryFormViewModel',
+      uc: [['CreateInvoiceUseCase','create(_:)'], ['CreateExpenseUseCase','createExpense(_:)'], ['UpdateExpenseUseCase','updateExpense(_:)'], ['FetchClientsUseCase','fetchClients()'], ['FetchIssuerProfileUseCase','fetchProfile()']],
+      opens: [['IssuerProfileFormView','sheet','Si faltan los datos fiscales']],
+      note: 'Un solo formulario con tres usos: nuevo ingreso (CreateInvoice), nuevo gasto (CreateExpense) y editar gasto (UpdateExpense). En gastos se puede teclear el total y se deriva la base.' },
+    CorrectiveInvoiceFormView: { tab: 'Rectificar factura', vm: 'CorrectiveInvoiceFormViewModel',
+      uc: [['CreateCorrectiveInvoiceUseCase','create(_:)']],
+      opens: [],
+      note: 'Anulación total o importe parcial. Solo se permite una rectificativa por factura.' },
+    IssuerProfileFormView: { tab: 'Mis datos fiscales', vm: 'IssuerProfileFormViewModel',
+      uc: [['FetchIssuerProfileUseCase','fetchProfile()'], ['SaveIssuerProfileUseCase','saveProfile(_:)']],
+      opens: [],
+      note: 'Nombre y NIF del autónomo. Rellena el emisor de los ingresos y el destinatario de los gastos.' }
+  };
+
+  // Árbol por pestaña de HomeView. r = pantalla ya dibujada en otro punto.
+  var TABS = [
+    { name: 'Inicio', icon: 'house', tree:
+      { id: 'DashboardView', kids: [ { edge: 'push', id: 'AppointmentDetailView', kids: [ { edge: 'sheet', id: 'AppointmentFormView' } ] } ] } },
+    { name: 'Calendario', icon: 'calendar', tree:
+      { id: 'AppointmentsCalendarView', kids: [
+        { edge: 'sheet', id: 'AppointmentFormView' },
+        { edge: 'push', id: 'DayAppointmentsView', kids: [ { edge: 'push', id: 'AppointmentDetailView', kids: [ { edge: 'sheet', id: 'AppointmentFormView', r: 1 } ] } ] },
+        { edge: 'push', id: 'AppointmentDetailView', r: 1 }
+      ] } },
+    { name: 'Clientes', icon: 'person.2', tree:
+      { id: 'ClientsView', kids: [
+        { edge: 'sheet', id: 'ClientFormView' },
+        { edge: 'push', id: 'ClientDetailView', kids: [ { edge: 'sheet', id: 'ClientFormView', r: 1 } ] }
+      ] } },
+    { name: 'Actividad', icon: 'list.bullet.rectangle', tree:
+      { id: 'ActivityView', kids: [
+        { edge: 'sheet', id: 'ActivityEntryFormView', kids: [ { edge: 'sheet', id: 'IssuerProfileFormView' } ] },
+        { edge: 'sheet', id: 'IssuerProfileFormView', r: 1 },
+        { edge: 'push', id: 'InvoiceDetailView', kids: [ { edge: 'sheet', id: 'CorrectiveInvoiceFormView' } ] },
+        { edge: 'push', id: 'ExpenseDetailView', kids: [ { edge: 'sheet', id: 'ActivityEntryFormView', r: 1 } ] }
+      ] } }
+  ];
+
+  // Acciones: l = capa (pres, dom, data, infra).
+  var ACTIONS = [
+    { id: 'ingreso', title: 'Emitir un ingreso',
+      intro: 'Crea una factura emitida, la firma enlazándola con la anterior y la guarda. Una vez guardada no se modifica nunca.',
+      steps: [
+        ['pres', 'ActivityEntryFormView', 'Botón Guardar: llama a viewModel.save() y, si devuelve true, a onSave() y cierra la hoja.'],
+        ['pres', 'ActivityEntryFormViewModel.save()', 'Comprueba canSave, calcula el TaxBreakdown (base, IVA, IRPF, total) y monta la Invoice con el perfil fiscal como emisor.'],
+        ['dom',  'CreateInvoiceUseCase.create(_:)', 'Si el número viene vacío lo genera por año (AAAA-0001, 0002…).'],
+        ['data', 'InvoiceChainRepository.fetchLastHash()', 'Lee la última huella de la cadena. La primera factura parte de la huella génesis "0".'],
+        ['infra','HashChainSigner.sign(payload:previousHash:)', 'SHA-256 de los campos obligatorios más la huella anterior.'],
+        ['data', 'InvoiceRepository.create(_:)', 'Inserta InvoiceEntity y actualiza HashChainPointerEntity con la nueva huella.'],
+        ['infra','ModelContext.save()', 'SwiftData persiste los dos cambios a la vez.'],
+        ['pres', 'ActivityViewModel.load()', 'El onSave de ActivityView recarga ingresos, gastos y rectificativas.']
+      ],
+      rule: '<strong>RRSIF:</strong> append-only y cadena de hash. Romper la cadena es una infracción.' },
+    { id: 'rectificar', title: 'Rectificar una factura',
+      intro: 'No se edita la factura emitida: se crea una factura rectificativa que la referencia por número y huella.',
+      steps: [
+        ['pres', 'InvoiceDetailView', 'Botón Rectificar (solo aparece si la factura no tiene ya una rectificativa). Abre CorrectiveInvoiceFormView como hoja.'],
+        ['pres', 'CorrectiveInvoiceFormViewModel.save()', 'Importe siempre negativo y como mucho el total original. Monta la CorrectiveInvoice con el número vacío.'],
+        ['dom',  'CreateCorrectiveInvoiceUseCase.create(_:)', 'Orquesta las comprobaciones y la firma.'],
+        ['data', 'InvoiceRepository.fetchAll()', 'Comprueba que la original existe con ese número y esa huella; si no, RepositoryError.notFound.'],
+        ['data', 'CorrectiveInvoiceRepository.fetchAll()', 'Si ya hay una rectificativa de esa factura, lanza CorrectiveInvoiceError.alreadyCorrected.'],
+        ['dom',  'nextNumber(for:)', 'Genera el número R-AAAA-0001 por año.'],
+        ['data', 'InvoiceChainRepository.fetchLastHash()', 'Última huella de la cadena, compartida con las facturas.'],
+        ['infra','HashChainSigner.sign(payload:previousHash:)', 'Firma la rectificativa y la engancha a la cadena.'],
+        ['data', 'CorrectiveInvoiceRepository.create(_:)', 'Inserta CorrectiveInvoiceEntity y actualiza HashChainPointerEntity.'],
+        ['pres', 'ActivityViewModel.load()', 'Recarga: el detalle muestra la rectificativa y el botón desaparece.']
+      ],
+      rule: '<strong>Una por factura.</strong> La regla vive en el caso de uso, así que se cumple aunque la pantalla no oculte el botón.' },
+    { id: 'gasto', title: 'Registrar o editar un gasto',
+      intro: 'Los gastos son facturas recibidas. No entran en la cadena de hash, así que se pueden editar.',
+      steps: [
+        ['pres', 'ActivityEntryFormView', 'Nuevo gasto desde el menú +, o Editar desde ExpenseDetailView. Se puede teclear la base o el total.'],
+        ['pres', 'ActivityEntryFormViewModel.save()', 'Con Total elegido deriva la base: total / (1 + (IVA − IRPF) / 100), ajustada al céntimo.'],
+        ['dom',  'CreateExpenseUseCase.createExpense(_:)  /  UpdateExpenseUseCase.updateExpense(_:)', 'Uno u otro según haya un gasto en edición.'],
+        ['data', 'ExpenseRepository.create(_:)  /  update(_:)', 'Inserta una ExpenseEntity nueva o copia los campos sobre la existente (busca por id).'],
+        ['infra','ModelContext.save()', 'Persiste el gasto.'],
+        ['pres', 'ActivityViewModel.load()', 'Recarga la lista; el detalle abierto resuelve el gasto actualizado por id.']
+      ] },
+    { id: 'cita', title: 'Guardar, cancelar o eliminar una cita',
+      intro: 'Un único formulario con cuatro salidas. Las citas facturadas no se pueden editar.',
+      steps: [
+        ['pres', 'AppointmentFormView', 'Guardar, Cancelar cita o Eliminar cita (con confirmationDialog). Cancelar pregunta si es justificada.'],
+        ['pres', 'AppointmentFormViewModel.save()  /  cancel(kind:)  /  delete()', 'Valida el precio y monta la Appointment conservando id, estado e invoiceID.'],
+        ['dom',  'Create…  /  UpdateAppointmentUseCase.updateAppointment(_:)  /  DeleteAppointmentUseCase.deleteAppointment(id:)', 'save() crea o actualiza; cancel(kind:) actualiza con estado cancelado; delete() borra por id.'],
+        ['data', 'AppointmentRepository', 'create, update o delete sobre AppointmentEntity.'],
+        ['infra','ModelContext.save()', 'Persiste el cambio.'],
+        ['pres', 'onSave() del padre', 'Calendario y Dashboard recargan con load().']
+      ],
+      rule: 'Una cancelación <strong>sin justificar</strong> sin factura cuenta como pendiente de facturar en el saldo del trimestre.' },
+    { id: 'cliente', title: 'Guardar un cliente',
+      intro: 'El mismo formulario crea y edita. Nombre y NIF son obligatorios; los campos opcionales vacíos se guardan como nil.',
+      steps: [
+        ['pres', 'ClientFormView', 'Botón Guardar. Se abre desde + en ClientsView o desde Editar en ClientDetailView.'],
+        ['pres', 'ClientFormViewModel.save()', 'Crea o actualiza según llegue un cliente existente.'],
+        ['dom',  'CreateClientUseCase.createClient(_:)  /  UpdateClientUseCase.updateClient(_:)', 'Delegan en el repositorio.'],
+        ['data', 'ClientRepository', 'create o update sobre ClientEntity.'],
+        ['infra','ModelContext.save()', 'Persiste el cambio.'],
+        ['pres', 'ClientsViewModel.load()', 'Recarga la lista ordenada por nombre.']
+      ] },
+    { id: 'saldo', title: 'Calcular el saldo del trimestre',
+      intro: 'El Dashboard junta tres repositorios en un solo caso de uso para no repartir la lógica en la vista.',
+      steps: [
+        ['pres', 'DashboardView', 'Al aparecer pide los datos a su ViewModel.'],
+        ['pres', 'DashboardViewModel.load(now:)', 'Pide a la vez citas, clientes y el saldo del trimestre en curso.'],
+        ['dom',  'FetchQuarterBalanceUseCase.fetchBalance(for:)', 'Suma lo facturado, resta las rectificativas y cuenta las citas pendientes de facturar.'],
+        ['data', 'InvoiceRepository.fetchAll()  ·  CorrectiveInvoiceRepository.fetchAll()  ·  AppointmentRepository.fetchAll()', 'Lectura de las tres entidades.'],
+        ['pres', 'QuarterBalance', 'El ViewModel lo expone y la vista lo pinta.']
+      ],
+      rule: 'El saldo es una definición provisional; está en la lista de pendientes revisarla.' }
+  ];
+
+  /* ---------- Utilidades ---------- */
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function uniq(a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }); }
+  function item(layer, name, sub) {
+    return '<div class="item" style="--c:' + LAYER[layer] + '"><span class="mono">' + esc(name) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
+  }
+  function col(layer, label, html) {
+    return '<div class="col"><div class="col-label"><span class="dot" style="--c:' + LAYER[layer] + '"></span>' + label + '</div>' + (html || '<span class="empty">Ninguno</span>') + '</div>';
+  }
+
+  /* ---------- Navegación ---------- */
+  var selected = 'ActivityEntryFormView';
+
+  function nodeHtml(n) {
+    var edge = n.edge ? '<span class="edge ' + n.edge + '">' + n.edge + '</span>' : '';
+    var btn = '<button type="button" class="node' + (n.r ? ' repeat' : '') + '" data-screen="' + n.id + '" aria-pressed="false">' + n.id + '</button>';
+    var kids = (n.kids && n.kids.length) ? '<ul>' + n.kids.map(nodeHtml).join('') + '</ul>' : '';
+    return '<li><div class="node-row">' + edge + btn + '</div>' + kids + '</li>';
+  }
+
+  function renderTabs() {
+    document.getElementById('tabs').innerHTML = TABS.map(function (t) {
+      return '<div class="tab"><div class="tab-title"><h3>' + t.name + '</h3><span>' + t.icon + '</span></div><ul class="tree">' + nodeHtml(t.tree) + '</ul></div>';
+    }).join('');
+  }
+
+  function renderPanel() {
+    var s = S[selected];
+    var ucs = s.uc;
+    var repos = uniq([].concat.apply([], ucs.map(function (u) { return UC[u[0]].repos; })));
+    var infra = uniq([].concat.apply([], ucs.map(function (u) { return UC[u[0]].infra || []; })));
+    var entities = uniq([].concat.apply([], repos.map(function (r) { return REPO[r]; })));
+
+    var vmHtml = s.vm ? item('pres', s.vm) : '';
+    var ucHtml = ucs.map(function (u) { return item('dom', u[0], u[1]); }).join('');
+    var repoHtml = repos.map(function (r) { return item('data', r); }).join('');
+    var lastHtml = entities.map(function (e) { return item('infra', e); }).join('') + infra.map(function (i) { return item('infra', i, 'Infrastructure'); }).join('');
+
+    var opens = s.opens.length
+      ? '<ul>' + s.opens.map(function (o) {
+          return '<li><span class="edge ' + o[1] + '">' + o[1] + '</span><button type="button" class="node" data-goto="' + o[0] + '">' + o[0] + '</button><span class="why">' + esc(o[2]) + '</span></li>';
+        }).join('') + '</ul>'
+      : '<span class="empty">No abre otras pantallas.</span>';
+
+    document.getElementById('panel').innerHTML =
+      '<div class="panel-head"><span class="col-label"><span class="dot" style="--c:var(--pres)"></span>' + esc(s.tab) + '</span><span class="mono">' + selected + '</span>' +
+      (s.vm ? '' : '<p>Sin ViewModel: recibe los datos y los cierres de su pantalla padre.</p>') + '</div>' +
+      '<div class="chain">' +
+        col('pres', 'ViewModel', vmHtml) +
+        col('dom', 'Casos de uso', ucHtml) +
+        col('data', 'Repositorios', repoHtml) +
+        col('infra', 'Entidades e infra.', lastHtml) +
+      '</div>' +
+      '<div class="opens"><h3>Abre</h3>' + opens + '</div>' +
+      '<p class="note">' + esc(s.note) + '</p>';
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-screen]'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-screen') === selected ? 'true' : 'false');
+    });
+  }
+
+  function select(id, scroll) {
+    if (!S[id]) return;
+    selected = id;
+    renderPanel();
+    if (scroll && window.matchMedia('(max-width: 1019px)').matches) {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.getElementById('panel').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-screen],[data-goto]');
+    if (!t) return;
+    select(t.getAttribute('data-screen') || t.getAttribute('data-goto'), true);
+  });
+
+  /* ---------- Acciones ---------- */
+  var LAYER_NAME = { pres: 'Presentation', dom: 'Domain', data: 'Data', infra: 'SwiftData / Infra' };
+  var currentAction = ACTIONS[0].id;
+
+  function renderPicker() {
+    document.getElementById('picker').innerHTML = ACTIONS.map(function (a) {
+      return '<button type="button" class="pick" data-action="' + a.id + '" aria-pressed="' + (a.id === currentAction) + '">' + a.title + '</button>';
+    }).join('');
+  }
+
+  function renderFlow() {
+    var a = ACTIONS.filter(function (x) { return x.id === currentAction; })[0];
+    document.getElementById('flow').innerHTML =
+      '<h3>' + a.title + '</h3><p>' + esc(a.intro) + '</p>' +
+      '<ol class="steps">' + a.steps.map(function (st, i) {
+        return '<li class="step" style="--c:' + LAYER[st[0]] + '"><span class="n">' + (i + 1) + '</span><div class="body"><div class="top"><span class="layer">' + LAYER_NAME[st[0]] + '</span><code>' + esc(st[1]) + '</code></div><span class="desc">' + esc(st[2]) + '</span></div></li>';
+      }).join('') + '</ol>' +
+      (a.rule ? '<div class="rule">' + a.rule + '</div>' : '');
+  }
+
+  document.getElementById('picker').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-action]');
+    if (!b) return;
+    currentAction = b.getAttribute('data-action');
+    renderPicker();
+    renderFlow();
+  });
+
+  renderTabs();
+  renderPanel();
+  renderPicker();
+  renderFlow();
+})();
+</script>

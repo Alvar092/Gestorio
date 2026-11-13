@@ -9,6 +9,7 @@ struct Expense: Identifiable, Equatable {
     var recipientName: String
     var recipientTaxID: String
     var concept: String
+    var category: ExpenseCategory
     var taxBase: Decimal
     var vatRate: Decimal
     var irpfRate: Decimal
@@ -22,6 +23,7 @@ struct Expense: Identifiable, Equatable {
         recipientName: String,
         recipientTaxID: String,
         concept: String,
+        category: ExpenseCategory = .other,
         taxBase: Decimal,
         vatRate: Decimal,
         irpfRate: Decimal,
@@ -34,6 +36,7 @@ struct Expense: Identifiable, Equatable {
         self.recipientName = recipientName
         self.recipientTaxID = recipientTaxID
         self.concept = concept
+        self.category = category
         self.taxBase = taxBase
         self.vatRate = vatRate
         self.irpfRate = irpfRate

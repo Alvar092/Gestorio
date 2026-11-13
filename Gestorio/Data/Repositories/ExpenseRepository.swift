@@ -53,6 +53,7 @@ private extension ExpenseEntity {
         recipientName = expense.recipientName
         recipientTaxID = expense.recipientTaxID
         concept = expense.concept
+        categoryRaw = expense.category.rawValue
         taxBase = expense.taxBase
         vatRate = expense.vatRate
         irpfRate = expense.irpfRate
@@ -68,6 +69,7 @@ private extension ExpenseEntity {
             recipientName: expense.recipientName,
             recipientTaxID: expense.recipientTaxID,
             concept: expense.concept,
+            categoryRaw: expense.category.rawValue,
             taxBase: expense.taxBase,
             vatRate: expense.vatRate,
             irpfRate: expense.irpfRate,
@@ -84,6 +86,7 @@ private extension ExpenseEntity {
             recipientName: recipientName,
             recipientTaxID: recipientTaxID,
             concept: concept,
+            category: ExpenseCategory(rawValue: categoryRaw) ?? .other,
             taxBase: taxBase,
             vatRate: vatRate,
             irpfRate: irpfRate,

@@ -10,6 +10,7 @@ final class ExpenseEntity {
     var recipientName: String
     var recipientTaxID: String
     var concept: String
+    var categoryRaw: String = "other" ///Default value for migrations
     var taxBase: Decimal
     var vatRate: Decimal
     var irpfRate: Decimal
@@ -23,6 +24,7 @@ final class ExpenseEntity {
         recipientName: String,
         recipientTaxID: String,
         concept: String,
+        categoryRaw: String,
         taxBase: Decimal,
         vatRate: Decimal,
         irpfRate: Decimal,
@@ -35,6 +37,7 @@ final class ExpenseEntity {
         self.recipientName = recipientName
         self.recipientTaxID = recipientTaxID
         self.concept = concept
+        self.categoryRaw = categoryRaw
         self.taxBase = taxBase
         self.vatRate = vatRate
         self.irpfRate = irpfRate

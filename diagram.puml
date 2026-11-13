@@ -1,0 +1,1118 @@
+@startuml
+' STYLE START
+hide empty members
+skinparam shadowing false
+' STYLE END
+set namespaceSeparator none
+
+
+class "HashChainSigningContract" as HashChainSigningContract << (P, GoldenRod) protocol >> { 
+  ~sign(payload:previousHash:) 
+}
+class "AppointmentRepositoryProtocol" as AppointmentRepositoryProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchAll()
+  ~fetch(id:)
+  ~fetch(clientID:)
+  ~create(_:)
+  ~update(_:)
+  ~delete(id:) 
+}
+class "IssuerProfileRepositoryProtocol" as IssuerProfileRepositoryProtocol << (P, GoldenRod) protocol >> { 
+  ~fetch()
+  ~save(_:) 
+}
+class "ExpenseRepositoryProtocol" as ExpenseRepositoryProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchAll()
+  ~create(_:)
+  ~update(_:) 
+}
+class "InvoiceRepositoryProtocol" as InvoiceRepositoryProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:) 
+}
+class "CorrectiveInvoiceRepositoryProtocol" as CorrectiveInvoiceRepositoryProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:) 
+}
+class "InvoiceChainRepositoryProtocol" as InvoiceChainRepositoryProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchLastHash() 
+}
+class "ClientRepositoryProtocol" as ClientRepositoryProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:)
+  ~update(_:)
+  ~delete(id:) 
+}
+class "FetchClientsUseCaseProtocol" as FetchClientsUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchClients() 
+}
+class "DeleteClientUseCaseProtocol" as DeleteClientUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~deleteClient(id:) 
+}
+class "CreateClientUseCaseProtocol" as CreateClientUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~createClient(_:) 
+}
+class "CreateCorrectiveInvoiceUseCaseProtocol" as CreateCorrectiveInvoiceUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~create(_:) 
+}
+class "DeleteAppointmentUseCaseProtocol" as DeleteAppointmentUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~deleteAppointment(id:) 
+}
+class "FetchCorrectiveInvoicesUseCaseProtocol" as FetchCorrectiveInvoicesUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchCorrectiveInvoices() 
+}
+class "CreateInvoiceUseCaseProtocol" as CreateInvoiceUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~create(_:) 
+}
+class "FetchIssuerProfileUseCaseProtocol" as FetchIssuerProfileUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchProfile() 
+}
+class "SaveIssuerProfileUseCaseProtocol" as SaveIssuerProfileUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~saveProfile(_:) 
+}
+class "CreateAppointmentUseCaseProtocol" as CreateAppointmentUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~createAppointment(_:) 
+}
+class "UpdateExpenseUseCaseProtocol" as UpdateExpenseUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~updateExpense(_:) 
+}
+class "FetchAppointmentsUseCaseProtocol" as FetchAppointmentsUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchAppointments() 
+}
+class "UpdateClientUseCaseProtocol" as UpdateClientUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~updateClient(_:) 
+}
+class "FetchInvoicesUseCaseProtocol" as FetchInvoicesUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchInvoices() 
+}
+class "UpdateAppointmentUseCaseProtocol" as UpdateAppointmentUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~updateAppointment(_:) 
+}
+class "FetchExpensesUseCaseProtocol" as FetchExpensesUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchExpenses() 
+}
+class "CreateExpenseUseCaseProtocol" as CreateExpenseUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~createExpense(_:) 
+}
+class "FetchQuarterBalanceUseCaseProtocol" as FetchQuarterBalanceUseCaseProtocol << (P, GoldenRod) protocol >> { 
+  ~fetchBalance(for:) 
+}
+class "HomeView" as HomeView << (S, SkyBlue) struct >> { 
+  ~body : some View 
+}
+class "MonthCalendarView" as MonthCalendarView << (S, SkyBlue) struct >> { 
+  ~displayedMonth : Date
+  ~markedDates : Set<Date>
+  ~selectedDate : Date?
+  ~onSelect : (Date) -> Void
+  -calendar
+  -columns
+  ~body : some View
+  -header : some View
+  -weekdayHeader : some View
+  -dayCell(for:)
+  -changeMonth(by:)
+  -daysInGrid : [Date?] 
+}
+class "DecimalInput" as DecimalInput << (E, LightSteelBlue) enum >> { 
+  ~{static} sanitize(_:)
+  ~{static} parse(_:) 
+}
+class "MockHashChainSigner" as MockHashChainSigner << (C, DarkSeaGreen) >> { 
+  ~hashToReturn
+  ~lastPayload : String?
+  ~lastPreviousHash : String?
+  ~sign(payload:previousHash:) 
+}
+class "HashChainSigner" as HashChainSigner << (C, DarkSeaGreen) >> { 
+  ~{static} shared
+  ~sign(payload:previousHash:) 
+}
+class "MockAppointmentRepository" as MockAppointmentRepository << (C, DarkSeaGreen) >> { 
+  ~appointments : [Appointment]
+  ~errorToThrow : Error?
+  ~fetchAll()
+  ~fetch(id:)
+  ~fetch(clientID:)
+  ~create(_:)
+  ~update(_:)
+  ~delete(id:) 
+}
+class "MockInvoiceChainRepository" as MockInvoiceChainRepository << (C, DarkSeaGreen) >> { 
+  ~lastHash : String
+  ~errorToThrow : Error?
+  ~fetchLastHash() 
+}
+class "MockInvoiceRepository" as MockInvoiceRepository << (C, DarkSeaGreen) >> { 
+  ~invoices : [Invoice]
+  ~errorToThrow : Error?
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:) 
+}
+class "MockExpenseRepository" as MockExpenseRepository << (C, DarkSeaGreen) >> { 
+  ~expenses : [Expense]
+  ~errorToThrow : Error?
+  ~fetchAll()
+  ~create(_:)
+  ~update(_:) 
+}
+class "MockIssuerProfileRepository" as MockIssuerProfileRepository << (C, DarkSeaGreen) >> { 
+  ~profile : IssuerProfile?
+  ~errorToThrow : Error?
+  ~fetch()
+  ~save(_:) 
+}
+class "MockCorrectiveInvoiceRepository" as MockCorrectiveInvoiceRepository << (C, DarkSeaGreen) >> { 
+  ~correctiveInvoices : [CorrectiveInvoice]
+  ~errorToThrow : Error?
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:) 
+}
+class "MockClientRepository" as MockClientRepository << (C, DarkSeaGreen) >> { 
+  ~clients : [Client]
+  ~errorToThrow : Error?
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:)
+  ~update(_:)
+  ~delete(id:) 
+}
+class "RepositoryError" as RepositoryError << (E, LightSteelBlue) enum >> { 
+  ~notFound 
+}
+class "AppointmentRepository" as AppointmentRepository << (C, DarkSeaGreen) >> { 
+  -modelContext : ModelContext
+  ~init(modelContext:)
+  ~init()
+  ~fetchAll()
+  ~fetch(id:)
+  ~fetch(clientID:)
+  ~create(_:)
+  ~update(_:)
+  ~delete(id:)
+  -entity(id:) 
+}
+class "IssuerProfileRepository" as IssuerProfileRepository << (C, DarkSeaGreen) >> { 
+  -modelContext : ModelContext
+  ~init(modelContext:)
+  ~init()
+  ~fetch()
+  ~save(_:)
+  -entity() 
+}
+class "ExpenseRepository" as ExpenseRepository << (C, DarkSeaGreen) >> { 
+  -modelContext : ModelContext
+  ~init(modelContext:)
+  ~init()
+  ~fetchAll()
+  ~create(_:)
+  ~update(_:) 
+}
+class "InvoiceRepository" as InvoiceRepository << (C, DarkSeaGreen) >> { 
+  -modelContext : ModelContext
+  ~init(modelContext:)
+  ~init()
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:)
+  -entity(id:)
+  -upsertChainPointer(hash:) 
+}
+class "CorrectiveInvoiceRepository" as CorrectiveInvoiceRepository << (C, DarkSeaGreen) >> { 
+  -modelContext : ModelContext
+  ~init(modelContext:)
+  ~init()
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:)
+  -entity(id:)
+  -upsertChainPointer(hash:) 
+}
+class "InvoiceChainRepository" as InvoiceChainRepository << (C, DarkSeaGreen) >> { 
+  ~{static} genesisHash
+  -modelContext : ModelContext
+  ~init(modelContext:)
+  ~init()
+  ~fetchLastHash() 
+}
+class "ClientRepository" as ClientRepository << (C, DarkSeaGreen) >> { 
+  -modelContext : ModelContext
+  ~init(modelContext:)
+  ~init()
+  ~fetchAll()
+  ~fetch(id:)
+  ~create(_:)
+  ~update(_:)
+  ~delete(id:)
+  -entity(id:) 
+}
+class "InvoiceEntity" as InvoiceEntity << (C, DarkSeaGreen) >> { 
+  ~id : UUID
+  ~number : String
+  ~date : Date
+  ~issuerName : String
+  ~issuerTaxID : String
+  ~clientName : String
+  ~clientTaxID : String
+  ~concept : String
+  ~taxBase : Decimal
+  ~vatRate : Decimal
+  ~irpfRate : Decimal
+  ~totalPrice : Decimal
+  ~previousHash : String
+  ~recordHash : String
+  ~init(id:number:date:issuerName:issuerTaxID:clientName:clientTaxID:concept:taxBase:vatRate:irpfRate:totalPrice:previousHash:recordHash:) 
+}
+class "ClientEntity" as ClientEntity << (C, DarkSeaGreen) >> { 
+  ~id : UUID
+  ~name : String
+  ~taxID : String
+  ~street : String
+  ~postalCode : String
+  ~city : String
+  ~province : String
+  ~email : String?
+  ~phone : String?
+  ~notes : String?
+  ~init(id:name:taxID:street:postalCode:city:province:email:phone:notes:) 
+}
+class "HashChainPointerEntity" as HashChainPointerEntity << (C, DarkSeaGreen) >> { 
+  ~id : String
+  ~lastHash : String
+  ~init(id:lastHash:)
+  ~{static} singletonID 
+}
+class "CorrectiveInvoiceEntity" as CorrectiveInvoiceEntity << (C, DarkSeaGreen) >> { 
+  ~id : UUID
+  ~number : String
+  ~date : Date
+  ~clientName : String
+  ~clientTaxID : String
+  ~concept : String
+  ~totalPrice : Decimal
+  ~originalInvoiceNumber : String
+  ~originalInvoiceHash : String
+  ~previousHash : String
+  ~recordHash : String
+  ~init(id:number:date:clientName:clientTaxID:concept:totalPrice:originalInvoiceNumber:originalInvoiceHash:previousHash:recordHash:) 
+}
+class "AppointmentEntity" as AppointmentEntity << (C, DarkSeaGreen) >> { 
+  ~id : UUID
+  ~clientID : UUID
+  ~date : Date
+  ~durationMinutes : Int
+  ~service : String
+  ~price : Decimal
+  ~status : AppointmentStatus
+  ~invoiceID : UUID?
+  ~notes : String?
+  ~cancellationKind : CancellationKind?
+  ~init(id:clientID:date:durationMinutes:service:price:status:invoiceID:notes:cancellationKind:) 
+}
+class "IssuerProfileEntity" as IssuerProfileEntity << (C, DarkSeaGreen) >> { 
+  ~id : String
+  ~name : String
+  ~taxID : String
+  ~init(id:name:taxID:)
+  ~{static} singletonID 
+}
+class "ExpenseEntity" as ExpenseEntity << (C, DarkSeaGreen) >> { 
+  ~id : UUID
+  ~date : Date
+  ~issuerName : String
+  ~issuerTaxID : String
+  ~recipientName : String
+  ~recipientTaxID : String
+  ~concept : String
+  ~taxBase : Decimal
+  ~vatRate : Decimal
+  ~irpfRate : Decimal
+  ~totalPrice : Decimal
+  ~init(id:date:issuerName:issuerTaxID:recipientName:recipientTaxID:concept:taxBase:vatRate:irpfRate:totalPrice:) 
+}
+class "PersistenceController" as PersistenceController << (C, DarkSeaGreen) >> { 
+  ~{static} shared
+  ~container : ModelContainer
+  -init() 
+}
+class "MockFetchAppointmentsUseCase" as MockFetchAppointmentsUseCase << (C, DarkSeaGreen) >> { 
+  ~appointmentsToReturn : [Appointment]
+  ~errorToThrow : Error?
+  ~fetchAppointments() 
+}
+class "MockFetchCorrectiveInvoicesUseCase" as MockFetchCorrectiveInvoicesUseCase << (C, DarkSeaGreen) >> { 
+  ~correctiveInvoicesToReturn : [CorrectiveInvoice]
+  ~errorToThrow : Error?
+  ~fetchCorrectiveInvoices() 
+}
+class "MockCreateAppointmentUseCase" as MockCreateAppointmentUseCase << (C, DarkSeaGreen) >> { 
+  ~createdAppointments : [Appointment]
+  ~errorToThrow : Error?
+  ~createAppointment(_:) 
+}
+class "MockCreateCorrectiveInvoiceUseCase" as MockCreateCorrectiveInvoiceUseCase << (C, DarkSeaGreen) >> { 
+  ~createdCorrectiveInvoices : [CorrectiveInvoice]
+  ~errorToThrow : Error?
+  ~create(_:) 
+}
+class "MockCreateInvoiceUseCase" as MockCreateInvoiceUseCase << (C, DarkSeaGreen) >> { 
+  ~createdInvoices : [Invoice]
+  ~errorToThrow : Error?
+  ~create(_:) 
+}
+class "MockFetchClientsUseCase" as MockFetchClientsUseCase << (C, DarkSeaGreen) >> { 
+  ~clientsToReturn : [Client]
+  ~errorToThrow : Error?
+  ~fetchClients() 
+}
+class "MockUpdateAppointmentUseCase" as MockUpdateAppointmentUseCase << (C, DarkSeaGreen) >> { 
+  ~updatedAppointments : [Appointment]
+  ~errorToThrow : Error?
+  ~updateAppointment(_:) 
+}
+class "MockSaveIssuerProfileUseCase" as MockSaveIssuerProfileUseCase << (C, DarkSeaGreen) >> { 
+  ~savedProfiles : [IssuerProfile]
+  ~errorToThrow : Error?
+  ~saveProfile(_:) 
+}
+class "MockCreateClientUseCase" as MockCreateClientUseCase << (C, DarkSeaGreen) >> { 
+  ~createdClients : [Client]
+  ~errorToThrow : Error?
+  ~createClient(_:) 
+}
+class "MockFetchQuarterBalanceUseCase" as MockFetchQuarterBalanceUseCase << (C, DarkSeaGreen) >> { 
+  ~balanceToReturn
+  ~errorToThrow : Error?
+  ~fetchBalance(for:) 
+}
+class "MockFetchInvoicesUseCase" as MockFetchInvoicesUseCase << (C, DarkSeaGreen) >> { 
+  ~invoicesToReturn : [Invoice]
+  ~errorToThrow : Error?
+  ~fetchInvoices() 
+}
+class "MockCreateExpenseUseCase" as MockCreateExpenseUseCase << (C, DarkSeaGreen) >> { 
+  ~createdExpenses : [Expense]
+  ~errorToThrow : Error?
+  ~createExpense(_:) 
+}
+class "MockFetchIssuerProfileUseCase" as MockFetchIssuerProfileUseCase << (C, DarkSeaGreen) >> { 
+  ~profileToReturn : IssuerProfile?
+  ~errorToThrow : Error?
+  ~fetchProfile() 
+}
+class "MockFetchExpensesUseCase" as MockFetchExpensesUseCase << (C, DarkSeaGreen) >> { 
+  ~expensesToReturn : [Expense]
+  ~errorToThrow : Error?
+  ~fetchExpenses() 
+}
+class "MockUpdateExpenseUseCase" as MockUpdateExpenseUseCase << (C, DarkSeaGreen) >> { 
+  ~updatedExpenses : [Expense]
+  ~errorToThrow : Error?
+  ~updateExpense(_:) 
+}
+class "MockDeleteAppointmentUseCase" as MockDeleteAppointmentUseCase << (C, DarkSeaGreen) >> { 
+  ~deletedIDs : [UUID]
+  ~errorToThrow : Error?
+  ~deleteAppointment(id:) 
+}
+class "MockUpdateClientUseCase" as MockUpdateClientUseCase << (C, DarkSeaGreen) >> { 
+  ~updatedClients : [Client]
+  ~errorToThrow : Error?
+  ~updateClient(_:) 
+}
+class "IssuerProfile" as IssuerProfile << (S, SkyBlue) struct >> { 
+  ~name : String
+  ~taxID : String 
+}
+class "Invoice" as Invoice << (S, SkyBlue) struct >> { 
+  ~id : UUID
+  ~number : String
+  ~date : Date
+  ~issuerName : String
+  ~issuerTaxID : String
+  ~clientName : String
+  ~clientTaxID : String
+  ~concept : String
+  ~taxBase : Decimal
+  ~vatRate : Decimal
+  ~irpfRate : Decimal
+  ~totalPrice : Decimal
+  ~previousHash : String
+  ~hash : String
+  ~init(id:number:date:issuerName:issuerTaxID:clientName:clientTaxID:concept:taxBase:vatRate:irpfRate:totalPrice:previousHash:hash:) 
+}
+class "AppointmentStatus" as AppointmentStatus << (E, LightSteelBlue) enum >> { 
+  ~pending
+  ~completed
+  ~invoiced
+  ~cancelled 
+}
+class "CancellationKind" as CancellationKind << (E, LightSteelBlue) enum >> { 
+  ~justified
+  ~unjustified 
+}
+class "Appointment" as Appointment << (S, SkyBlue) struct >> { 
+  ~id : UUID
+  ~clientID : UUID
+  ~date : Date
+  ~durationMinutes : Int
+  ~service : String
+  ~price : Decimal
+  ~status : AppointmentStatus
+  ~invoiceID : UUID?
+  ~notes : String?
+  ~cancellationKind : CancellationKind?
+  ~init(id:clientID:date:durationMinutes:service:price:status:invoiceID:notes:cancellationKind:)
+  ~isChargeableCancellation : Bool 
+}
+class "QuarterBalance" as QuarterBalance << (S, SkyBlue) struct >> { 
+  ~year : Int
+  ~quarter : Int
+  ~interval : DateInterval
+  ~invoiced : Decimal
+  ~pendingToInvoice : Decimal 
+}
+class "TaxBreakdown" as TaxBreakdown << (S, SkyBlue) struct >> { 
+  ~base : Decimal
+  ~vatRate : Decimal
+  ~irpfRate : Decimal
+  ~vatAmount : Decimal
+  ~irpfAmount : Decimal
+  ~total : Decimal
+  -{static} percentage(of:rate:) 
+}
+class "CorrectiveInvoice" as CorrectiveInvoice << (S, SkyBlue) struct >> { 
+  ~id : UUID
+  ~number : String
+  ~date : Date
+  ~clientName : String
+  ~clientTaxID : String
+  ~concept : String
+  ~totalPrice : Decimal
+  ~originalInvoiceNumber : String
+  ~originalInvoiceHash : String
+  ~previousHash : String
+  ~hash : String
+  ~init(id:number:date:clientName:clientTaxID:concept:totalPrice:originalInvoiceNumber:originalInvoiceHash:previousHash:hash:) 
+}
+class "BillingAddress" as BillingAddress << (S, SkyBlue) struct >> { 
+  ~street : String
+  ~postalCode : String
+  ~city : String
+  ~province : String 
+}
+class "Client" as Client << (S, SkyBlue) struct >> { 
+  ~id : UUID
+  ~name : String
+  ~taxID : String
+  ~billingAddress : BillingAddress
+  ~email : String?
+  ~phone : String?
+  ~notes : String?
+  ~init(id:name:taxID:billingAddress:email:phone:notes:) 
+}
+class "Expense" as Expense << (S, SkyBlue) struct >> { 
+  ~id : UUID
+  ~date : Date
+  ~issuerName : String
+  ~issuerTaxID : String
+  ~recipientName : String
+  ~recipientTaxID : String
+  ~concept : String
+  ~taxBase : Decimal
+  ~vatRate : Decimal
+  ~irpfRate : Decimal
+  ~totalPrice : Decimal
+  ~init(id:date:issuerName:issuerTaxID:recipientName:recipientTaxID:concept:taxBase:vatRate:irpfRate:totalPrice:) 
+}
+class "FetchClientsUseCase" as FetchClientsUseCase << (C, DarkSeaGreen) >> { 
+  -repository : ClientRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~fetchClients() 
+}
+class "DeleteClientUseCase" as DeleteClientUseCase << (C, DarkSeaGreen) >> { 
+  -repository : ClientRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~deleteClient(id:) 
+}
+class "CreateClientUseCase" as CreateClientUseCase << (C, DarkSeaGreen) >> { 
+  -repository : ClientRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~createClient(_:) 
+}
+class "CorrectiveInvoiceError" as CorrectiveInvoiceError << (E, LightSteelBlue) enum >> { 
+  ~alreadyCorrected
+  ~errorDescription : String? 
+}
+class "CreateCorrectiveInvoiceUseCase" as CreateCorrectiveInvoiceUseCase << (C, DarkSeaGreen) >> { 
+  -correctiveInvoiceRepository : CorrectiveInvoiceRepositoryProtocol
+  -invoiceRepository : InvoiceRepositoryProtocol
+  -chainRepository : InvoiceChainRepositoryProtocol
+  -signer : HashChainSigningContract
+  ~init(correctiveInvoiceRepository:invoiceRepository:chainRepository:signer:)
+  ~init()
+  ~create(_:)
+  -nextNumber(for:)
+  -canonicalPayload(for:) 
+}
+class "DeleteAppointmentUseCase" as DeleteAppointmentUseCase << (C, DarkSeaGreen) >> { 
+  -repository : AppointmentRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~deleteAppointment(id:) 
+}
+class "FetchCorrectiveInvoicesUseCase" as FetchCorrectiveInvoicesUseCase << (C, DarkSeaGreen) >> { 
+  -repository : CorrectiveInvoiceRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~fetchCorrectiveInvoices() 
+}
+class "CreateInvoiceUseCase" as CreateInvoiceUseCase << (C, DarkSeaGreen) >> { 
+  -repository : InvoiceRepositoryProtocol
+  -chainRepository : InvoiceChainRepositoryProtocol
+  -signer : HashChainSigningContract
+  ~init(repository:chainRepository:signer:)
+  ~init()
+  ~create(_:)
+  -nextNumber(for:)
+  -canonicalPayload(for:) 
+}
+class "FetchIssuerProfileUseCase" as FetchIssuerProfileUseCase << (C, DarkSeaGreen) >> { 
+  -repository : IssuerProfileRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~fetchProfile() 
+}
+class "SaveIssuerProfileUseCase" as SaveIssuerProfileUseCase << (C, DarkSeaGreen) >> { 
+  -repository : IssuerProfileRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~saveProfile(_:) 
+}
+class "CreateAppointmentUseCase" as CreateAppointmentUseCase << (C, DarkSeaGreen) >> { 
+  -repository : AppointmentRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~createAppointment(_:) 
+}
+class "UpdateExpenseUseCase" as UpdateExpenseUseCase << (C, DarkSeaGreen) >> { 
+  -repository : ExpenseRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~updateExpense(_:) 
+}
+class "FetchAppointmentsUseCase" as FetchAppointmentsUseCase << (C, DarkSeaGreen) >> { 
+  -repository : AppointmentRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~fetchAppointments() 
+}
+class "UpdateClientUseCase" as UpdateClientUseCase << (C, DarkSeaGreen) >> { 
+  -repository : ClientRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~updateClient(_:) 
+}
+class "FetchInvoicesUseCase" as FetchInvoicesUseCase << (C, DarkSeaGreen) >> { 
+  -repository : InvoiceRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~fetchInvoices() 
+}
+class "UpdateAppointmentUseCase" as UpdateAppointmentUseCase << (C, DarkSeaGreen) >> { 
+  -repository : AppointmentRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~updateAppointment(_:) 
+}
+class "FetchExpensesUseCase" as FetchExpensesUseCase << (C, DarkSeaGreen) >> { 
+  -repository : ExpenseRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~fetchExpenses() 
+}
+class "CreateExpenseUseCase" as CreateExpenseUseCase << (C, DarkSeaGreen) >> { 
+  -repository : ExpenseRepositoryProtocol
+  ~init(repository:)
+  ~init()
+  ~createExpense(_:) 
+}
+class "FetchQuarterBalanceUseCase" as FetchQuarterBalanceUseCase << (C, DarkSeaGreen) >> { 
+  -invoiceRepository : InvoiceRepositoryProtocol
+  -correctiveInvoiceRepository : CorrectiveInvoiceRepositoryProtocol
+  -appointmentRepository : AppointmentRepositoryProtocol
+  -calendar
+  ~init(invoiceRepository:correctiveInvoiceRepository:appointmentRepository:)
+  ~init()
+  ~fetchBalance(for:) 
+}
+class "ClientsView" as ClientsView << (S, SkyBlue) struct >> { 
+  -viewModel
+  -isCreating
+  ~body : some View 
+}
+class "ClientDetailView" as ClientDetailView << (S, SkyBlue) struct >> { 
+  ~client : Client
+  ~onSaved : () -> Void
+  -isEditing
+  ~body : some View
+  -displayed(_:) 
+}
+class "ClientFormViewModel" as ClientFormViewModel << (C, DarkSeaGreen) >> { 
+  -createClientUseCase : CreateClientUseCaseProtocol
+  -updateClientUseCase : UpdateClientUseCaseProtocol
+  -editingClient : Client?
+  ~name : String
+  ~taxID : String
+  ~street : String
+  ~postalCode : String
+  ~city : String
+  ~province : String
+  ~email : String
+  ~phone : String
+  ~notes : String
+  ~errorMessage : String?
+  ~init(client:createClientUseCase:updateClientUseCase:)
+  ~init(client:)
+  ~isEditing : Bool
+  ~title : String
+  ~canSave : Bool
+  ~save()
+  -trimmed(_:)
+  -nilIfEmpty(_:) 
+}
+class "ClientsViewModel" as ClientsViewModel << (C, DarkSeaGreen) >> { 
+  -fetchClientsUseCase : FetchClientsUseCaseProtocol
+  ~clients : [Client]
+  ~errorMessage : String?
+  ~init(fetchClientsUseCase:)
+  ~init()
+  ~load()
+  ~client(id:) 
+}
+class "ClientFormView" as ClientFormView << (S, SkyBlue) struct >> { 
+  -viewModel : ClientFormViewModel
+  -dismiss
+  -onSave : () -> Void
+  ~init(client:onSave:)
+  ~body : some View 
+}
+class "DashboardView" as DashboardView << (S, SkyBlue) struct >> { 
+  -viewModel
+  ~body : some View
+  -balanceCard(_:)
+  -upcomingSection : some View 
+}
+class "DashboardViewModel" as DashboardViewModel << (C, DarkSeaGreen) >> { 
+  -fetchAppointmentsUseCase : FetchAppointmentsUseCaseProtocol
+  -fetchClientsUseCase : FetchClientsUseCaseProtocol
+  -fetchQuarterBalanceUseCase : FetchQuarterBalanceUseCaseProtocol
+  -upcomingLimit
+  ~upcomingAppointments : [Appointment]
+  ~clientsByID : [UUID: Client]
+  ~balance : QuarterBalance?
+  ~errorMessage : String?
+  ~init(fetchAppointmentsUseCase:fetchClientsUseCase:fetchQuarterBalanceUseCase:)
+  ~init()
+  ~load(now:)
+  ~appointment(id:)
+  ~clientName(for:) 
+}
+class "AppointmentsCalendarViewModel" as AppointmentsCalendarViewModel << (C, DarkSeaGreen) >> { 
+  -fetchAppointmentsUseCase : FetchAppointmentsUseCaseProtocol
+  -fetchClientsUseCase : FetchClientsUseCaseProtocol
+  -calendar
+  -upcomingLimit
+  ~displayedMonth : Date
+  ~appointments : [Appointment]
+  ~clientsByID : [UUID: Client]
+  ~errorMessage : String?
+  ~init(fetchAppointmentsUseCase:fetchClientsUseCase:referenceDate:)
+  ~init()
+  ~load()
+  ~datesWithAppointments : Set<Date>
+  ~upcomingAppointments(from:)
+  ~appointments(on:)
+  ~appointment(id:)
+  ~clientName(for:) 
+}
+class "UpcomingAppointmentRow" as UpcomingAppointmentRow << (S, SkyBlue) struct >> { 
+  ~appointment : Appointment
+  ~clientName : String
+  ~body : some View 
+}
+class "AppointmentFormViewModel" as AppointmentFormViewModel << (C, DarkSeaGreen) >> { 
+  -createAppointmentUseCase : CreateAppointmentUseCaseProtocol
+  -updateAppointmentUseCase : UpdateAppointmentUseCaseProtocol
+  -deleteAppointmentUseCase : DeleteAppointmentUseCaseProtocol
+  -fetchClientsUseCase : FetchClientsUseCaseProtocol
+  -editingAppointment : Appointment?
+  ~clients : [Client]
+  ~didLoadClients
+  ~clientID : UUID?
+  ~date : Date
+  ~durationMinutes : Int
+  ~service : String
+  ~priceText : String
+  ~notes : String
+  ~errorMessage : String?
+  ~init(appointment:createAppointmentUseCase:updateAppointmentUseCase:deleteAppointmentUseCase:fetchClientsUseCase:initialDate:)
+  ~init(appointment:initialDate:)
+  ~isEditing : Bool
+  ~title : String
+  ~canDelete : Bool
+  ~canCancel : Bool
+  ~canSave : Bool
+  ~price : Decimal?
+  ~sanitizePriceText()
+  ~loadClients()
+  ~save()
+  ~cancel(kind:)
+  ~delete()
+  -persist(status:cancellationKind:) 
+}
+class "AppointmentDetailView" as AppointmentDetailView << (S, SkyBlue) struct >> { 
+  ~appointment : Appointment
+  ~clientName : String
+  ~onSaved : () -> Void
+  -isEditing
+  -dismiss
+  -canEdit : Bool
+  ~body : some View 
+}
+class "DayAppointmentsView" as DayAppointmentsView << (S, SkyBlue) struct >> { 
+  ~date : Date
+  ~appointments : [Appointment]
+  ~clientName : (Appointment) -> String
+  ~body : some View
+  -row(for:) 
+}
+class "AppointmentFormView" as AppointmentFormView << (S, SkyBlue) struct >> { 
+  -viewModel : AppointmentFormViewModel
+  -dismiss
+  -isConfirmingDelete
+  -isChoosingCancellation
+  -onSave : () -> Void
+  -onDelete : () -> Void
+  ~init(appointment:initialDate:onSave:onDelete:)
+  ~body : some View 
+}
+class "AppointmentsCalendarView" as AppointmentsCalendarView << (S, SkyBlue) struct >> { 
+  -viewModel
+  -navigationPath
+  -isCreating
+  ~body : some View 
+}
+class "ActivityEntryFormViewModel" as ActivityEntryFormViewModel << (C, DarkSeaGreen) >> { 
+  ~{static} vatRates : [Decimal]
+  ~{static} irpfRates : [Decimal]
+  ~kind : ActivityKind
+  -createInvoiceUseCase : CreateInvoiceUseCaseProtocol
+  -createExpenseUseCase : CreateExpenseUseCaseProtocol
+  -updateExpenseUseCase : UpdateExpenseUseCaseProtocol
+  -editingExpense : Expense?
+  -fetchClientsUseCase : FetchClientsUseCaseProtocol
+  -fetchIssuerProfileUseCase : FetchIssuerProfileUseCaseProtocol
+  ~profile : IssuerProfile?
+  ~clients : [Client]
+  ~clientID : UUID?
+  ~counterpartyName
+  ~counterpartyTaxID
+  ~date : Date
+  ~concept
+  ~baseText
+  ~amountInput : AmountInput
+  ~vatRate : Decimal
+  ~hasIRPF
+  ~irpfRate : Decimal
+  ~errorMessage : String?
+  ~init(kind:createInvoiceUseCase:createExpenseUseCase:updateExpenseUseCase:fetchClientsUseCase:fetchIssuerProfileUseCase:initialDate:editing:)
+  ~init(kind:initialDate:editing:)
+  ~isEditing : Bool
+  ~title : String
+  ~allowsTotalInput : Bool
+  -effectiveAmountInput : AmountInput
+  ~base : Decimal?
+  ~{static} base(fromTotal:vatRate:irpfRate:)
+  ~breakdown : TaxBreakdown?
+  ~canSave : Bool
+  ~sanitizeBaseText()
+  ~load()
+  ~applySelectedClient()
+  ~save()
+  -trimmed(_:) 
+}
+class "AmountInput" as ActivityEntryFormViewModel.AmountInput << (E, LightSteelBlue) enum >> { 
+  ~base
+  ~total
+  ~id : String
+  ~title : String 
+}
+class "ActivityKind" as ActivityKind << (E, LightSteelBlue) enum >> { 
+  ~income
+  ~expense
+  ~id : String
+  ~title : String
+  ~newTitle : String 
+}
+class "ActivityViewModel" as ActivityViewModel << (C, DarkSeaGreen) >> { 
+  -fetchInvoicesUseCase : FetchInvoicesUseCaseProtocol
+  -fetchExpensesUseCase : FetchExpensesUseCaseProtocol
+  -fetchCorrectiveInvoicesUseCase : FetchCorrectiveInvoicesUseCaseProtocol
+  ~selectedKind : ActivityKind
+  ~invoices : [Invoice]
+  ~expenses : [Expense]
+  ~correctiveInvoices : [CorrectiveInvoice]
+  ~errorMessage : String?
+  ~init(fetchInvoicesUseCase:fetchExpensesUseCase:fetchCorrectiveInvoicesUseCase:)
+  ~init()
+  ~load()
+  ~invoice(id:)
+  ~expense(id:)
+  ~correctiveInvoices(for:) 
+}
+class "ActivityEntryFormView" as ActivityEntryFormView << (S, SkyBlue) struct >> { 
+  -viewModel : ActivityEntryFormViewModel
+  -isEditingProfile
+  -dismiss
+  -onSave : () -> Void
+  ~init(kind:editing:onSave:)
+  ~body : some View 
+}
+class "CorrectiveInvoiceFormViewModel" as CorrectiveInvoiceFormViewModel << (C, DarkSeaGreen) >> { 
+  ~original : Invoice
+  -createCorrectiveInvoiceUseCase : CreateCorrectiveInvoiceUseCaseProtocol
+  ~mode : Mode
+  ~amountText
+  ~concept : String
+  ~errorMessage : String?
+  ~init(original:createCorrectiveInvoiceUseCase:)
+  ~init(original:)
+  ~amount : Decimal?
+  ~correctionTotal : Decimal?
+  ~canSave : Bool
+  ~sanitizeAmountText()
+  ~save() 
+}
+class "Mode" as CorrectiveInvoiceFormViewModel.Mode << (E, LightSteelBlue) enum >> { 
+  ~full
+  ~partial
+  ~id : String
+  ~title : String 
+}
+class "ActivityView" as ActivityView << (S, SkyBlue) struct >> { 
+  -viewModel
+  -creatingKind : ActivityKind?
+  -isEditingProfile
+  ~body : some View
+  -content : some View 
+}
+class "ActivityRow" as ActivityRow << (S, SkyBlue) struct >> { 
+  ~title : String
+  ~subtitle : String
+  ~date : Date
+  ~amount : Decimal
+  ~body : some View 
+}
+class "IssuerProfileFormViewModel" as IssuerProfileFormViewModel << (C, DarkSeaGreen) >> { 
+  -fetchProfileUseCase : FetchIssuerProfileUseCaseProtocol
+  -saveProfileUseCase : SaveIssuerProfileUseCaseProtocol
+  ~name
+  ~taxID
+  ~errorMessage : String?
+  ~init(fetchProfileUseCase:saveProfileUseCase:)
+  ~init()
+  ~canSave : Bool
+  ~load()
+  ~save()
+  -trimmed(_:) 
+}
+class "IssuerProfileFormView" as IssuerProfileFormView << (S, SkyBlue) struct >> { 
+  -viewModel
+  -dismiss
+  ~body : some View 
+}
+class "InvoiceDetailView" as InvoiceDetailView << (S, SkyBlue) struct >> { 
+  ~invoice : Invoice
+  ~correctiveInvoices : [CorrectiveInvoice]
+  ~onChanged : () -> Void
+  -isCorrecting
+  ~body : some View 
+}
+class "TaxBreakdownRows" as TaxBreakdownRows << (S, SkyBlue) struct >> { 
+  ~breakdown : TaxBreakdown
+  ~body : some View 
+}
+class "ExpenseDetailView" as ExpenseDetailView << (S, SkyBlue) struct >> { 
+  ~expense : Expense
+  ~onSaved : () -> Void
+  -isEditing
+  ~body : some View 
+}
+class "CorrectiveInvoiceFormView" as CorrectiveInvoiceFormView << (S, SkyBlue) struct >> { 
+  -viewModel : CorrectiveInvoiceFormViewModel
+  -dismiss
+  -onSave : () -> Void
+  ~init(original:onSave:)
+  ~body : some View 
+}
+class "GestorioApp" as GestorioApp << (S, SkyBlue) struct >> { 
+  ~body : some Scene 
+}
+class "AppointmentEntity" as AppointmentEntity0 << (X, Orchid) extension >> { 
+  -init(appointment:)
+  -update(from:)
+  -domain : Appointment 
+}
+class "ExpenseEntity" as ExpenseEntity1 << (X, Orchid) extension >> { 
+  -update(from:)
+  -init(expense:)
+  -domain : Expense 
+}
+class "InvoiceEntity" as InvoiceEntity2 << (X, Orchid) extension >> { 
+  -init(invoice:)
+  -domain : Invoice 
+}
+class "CorrectiveInvoiceEntity" as CorrectiveInvoiceEntity3 << (X, Orchid) extension >> { 
+  -init(correctiveInvoice:)
+  -domain : CorrectiveInvoice 
+}
+class "ClientEntity" as ClientEntity4 << (X, Orchid) extension >> { 
+  -init(client:)
+  -update(from:)
+  -domain : Client 
+}
+class "AppointmentFormView" as AppointmentFormView5 << (X, Orchid) extension >> { 
+  -cancel(_:) 
+}
+class "AppointmentsCalendarView" as AppointmentsCalendarView6 << (X, Orchid) extension >> { 
+  -upcomingSection : some View 
+}
+class "ActivityEntryFormView" as ActivityEntryFormView7 << (X, Orchid) extension >> { 
+  -profileSection(title:)
+  -counterpartySection(title:showsClientPicker:) 
+}
+View <|-- HomeView : inherits
+View <|-- MonthCalendarView : inherits
+HashChainSigningContract <|.. MockHashChainSigner : conforms to
+HashChainSigningContract <|.. HashChainSigner : conforms to
+AppointmentRepositoryProtocol <|.. MockAppointmentRepository : conforms to
+InvoiceChainRepositoryProtocol <|.. MockInvoiceChainRepository : conforms to
+InvoiceRepositoryProtocol <|.. MockInvoiceRepository : conforms to
+ExpenseRepositoryProtocol <|.. MockExpenseRepository : conforms to
+IssuerProfileRepositoryProtocol <|.. MockIssuerProfileRepository : conforms to
+CorrectiveInvoiceRepositoryProtocol <|.. MockCorrectiveInvoiceRepository : conforms to
+ClientRepositoryProtocol <|.. MockClientRepository : conforms to
+Error -- RepositoryError : inherits
+Equatable -- RepositoryError : inherits
+AppointmentRepositoryProtocol <|.. AppointmentRepository : conforms to
+IssuerProfileRepositoryProtocol <|.. IssuerProfileRepository : conforms to
+ExpenseRepositoryProtocol <|.. ExpenseRepository : conforms to
+InvoiceRepositoryProtocol <|.. InvoiceRepository : conforms to
+CorrectiveInvoiceRepositoryProtocol <|.. CorrectiveInvoiceRepository : conforms to
+InvoiceChainRepositoryProtocol <|.. InvoiceChainRepository : conforms to
+ClientRepositoryProtocol <|.. ClientRepository : conforms to
+FetchAppointmentsUseCaseProtocol <|.. MockFetchAppointmentsUseCase : conforms to
+FetchCorrectiveInvoicesUseCaseProtocol <|.. MockFetchCorrectiveInvoicesUseCase : conforms to
+CreateAppointmentUseCaseProtocol <|.. MockCreateAppointmentUseCase : conforms to
+CreateCorrectiveInvoiceUseCaseProtocol <|.. MockCreateCorrectiveInvoiceUseCase : conforms to
+CreateInvoiceUseCaseProtocol <|.. MockCreateInvoiceUseCase : conforms to
+FetchClientsUseCaseProtocol <|.. MockFetchClientsUseCase : conforms to
+UpdateAppointmentUseCaseProtocol <|.. MockUpdateAppointmentUseCase : conforms to
+SaveIssuerProfileUseCaseProtocol <|.. MockSaveIssuerProfileUseCase : conforms to
+CreateClientUseCaseProtocol <|.. MockCreateClientUseCase : conforms to
+FetchQuarterBalanceUseCaseProtocol <|.. MockFetchQuarterBalanceUseCase : conforms to
+FetchInvoicesUseCaseProtocol <|.. MockFetchInvoicesUseCase : conforms to
+CreateExpenseUseCaseProtocol <|.. MockCreateExpenseUseCase : conforms to
+FetchIssuerProfileUseCaseProtocol <|.. MockFetchIssuerProfileUseCase : conforms to
+FetchExpensesUseCaseProtocol <|.. MockFetchExpensesUseCase : conforms to
+UpdateExpenseUseCaseProtocol <|.. MockUpdateExpenseUseCase : conforms to
+DeleteAppointmentUseCaseProtocol <|.. MockDeleteAppointmentUseCase : conforms to
+UpdateClientUseCaseProtocol <|.. MockUpdateClientUseCase : conforms to
+Equatable <|-- IssuerProfile : inherits
+Identifiable <|-- Invoice : inherits
+Equatable <|-- Invoice : inherits
+String -- AppointmentStatus : inherits
+Codable -- AppointmentStatus : inherits
+CaseIterable -- AppointmentStatus : inherits
+String -- CancellationKind : inherits
+Codable -- CancellationKind : inherits
+CaseIterable -- CancellationKind : inherits
+Identifiable <|-- Appointment : inherits
+Hashable <|-- Appointment : inherits
+Equatable <|-- QuarterBalance : inherits
+Equatable <|-- TaxBreakdown : inherits
+Identifiable <|-- CorrectiveInvoice : inherits
+Equatable <|-- CorrectiveInvoice : inherits
+Codable <|-- BillingAddress : inherits
+Equatable <|-- BillingAddress : inherits
+Identifiable <|-- Client : inherits
+Equatable <|-- Client : inherits
+Identifiable <|-- Expense : inherits
+Equatable <|-- Expense : inherits
+FetchClientsUseCaseProtocol <|.. FetchClientsUseCase : conforms to
+DeleteClientUseCaseProtocol <|.. DeleteClientUseCase : conforms to
+CreateClientUseCaseProtocol <|.. CreateClientUseCase : conforms to
+LocalizedError -- CorrectiveInvoiceError : inherits
+Equatable -- CorrectiveInvoiceError : inherits
+CreateCorrectiveInvoiceUseCaseProtocol <|.. CreateCorrectiveInvoiceUseCase : conforms to
+DeleteAppointmentUseCaseProtocol <|.. DeleteAppointmentUseCase : conforms to
+FetchCorrectiveInvoicesUseCaseProtocol <|.. FetchCorrectiveInvoicesUseCase : conforms to
+CreateInvoiceUseCaseProtocol <|.. CreateInvoiceUseCase : conforms to
+FetchIssuerProfileUseCaseProtocol <|.. FetchIssuerProfileUseCase : conforms to
+SaveIssuerProfileUseCaseProtocol <|.. SaveIssuerProfileUseCase : conforms to
+CreateAppointmentUseCaseProtocol <|.. CreateAppointmentUseCase : conforms to
+UpdateExpenseUseCaseProtocol <|.. UpdateExpenseUseCase : conforms to
+FetchAppointmentsUseCaseProtocol <|.. FetchAppointmentsUseCase : conforms to
+UpdateClientUseCaseProtocol <|.. UpdateClientUseCase : conforms to
+FetchInvoicesUseCaseProtocol <|.. FetchInvoicesUseCase : conforms to
+UpdateAppointmentUseCaseProtocol <|.. UpdateAppointmentUseCase : conforms to
+FetchExpensesUseCaseProtocol <|.. FetchExpensesUseCase : conforms to
+CreateExpenseUseCaseProtocol <|.. CreateExpenseUseCase : conforms to
+FetchQuarterBalanceUseCaseProtocol <|.. FetchQuarterBalanceUseCase : conforms to
+View <|-- ClientsView : inherits
+View <|-- ClientDetailView : inherits
+View <|-- ClientFormView : inherits
+View <|-- DashboardView : inherits
+View <|-- UpcomingAppointmentRow : inherits
+View <|-- AppointmentDetailView : inherits
+View <|-- DayAppointmentsView : inherits
+View <|-- AppointmentFormView : inherits
+View <|-- AppointmentsCalendarView : inherits
+String -- ActivityEntryFormViewModel.AmountInput : inherits
+CaseIterable -- ActivityEntryFormViewModel.AmountInput : inherits
+Identifiable -- ActivityEntryFormViewModel.AmountInput : inherits
+String -- ActivityKind : inherits
+CaseIterable -- ActivityKind : inherits
+Identifiable -- ActivityKind : inherits
+View <|-- ActivityEntryFormView : inherits
+String -- CorrectiveInvoiceFormViewModel.Mode : inherits
+CaseIterable -- CorrectiveInvoiceFormViewModel.Mode : inherits
+Identifiable -- CorrectiveInvoiceFormViewModel.Mode : inherits
+View <|-- ActivityView : inherits
+View <|-- ActivityRow : inherits
+View <|-- IssuerProfileFormView : inherits
+View <|-- InvoiceDetailView : inherits
+View <|-- TaxBreakdownRows : inherits
+View <|-- ExpenseDetailView : inherits
+View <|-- CorrectiveInvoiceFormView : inherits
+App <|-- GestorioApp : inherits
+ActivityEntryFormViewModel +-- ActivityEntryFormViewModel.AmountInput
+CorrectiveInvoiceFormViewModel +-- CorrectiveInvoiceFormViewModel.Mode
+AppointmentEntity <.. AppointmentEntity0 : ext
+ExpenseEntity <.. ExpenseEntity1 : ext
+InvoiceEntity <.. InvoiceEntity2 : ext
+CorrectiveInvoiceEntity <.. CorrectiveInvoiceEntity3 : ext
+ClientEntity <.. ClientEntity4 : ext
+AppointmentFormView <.. AppointmentFormView5 : ext
+AppointmentsCalendarView <.. AppointmentsCalendarView6 : ext
+ActivityEntryFormView <.. ActivityEntryFormView7 : ext
+@enduml

@@ -37,6 +37,13 @@ struct ActivityEntryFormView: View {
                     DatePicker("Fecha", selection: $viewModel.date, displayedComponents: .date)
                     TextField("Razón de la factura", text: $viewModel.concept, axis: .vertical)
                         .lineLimit(1...3)
+                    if viewModel.kind == .expense {
+                        Picker("Categoría", selection: $viewModel.category) {
+                            ForEach(ExpenseCategory.allCases) { category in
+                                Text(category.title).tag(category)
+                            }
+                        }
+                    }
                 }
 
                 Section("Importe") {
